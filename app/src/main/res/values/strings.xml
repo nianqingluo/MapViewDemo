@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">MapDemo</string>
+    <string-array name="pathspinner">
+        <item >1号路径</item>
+        <item >2号路径</item>
+        <item >3号路径</item>
+    </string-array>
+    <string-array name="scalespinner">
+        <item >1:100</item>
+        <item >1:1000</item>
+        <item >1:10000</item>
+    </string-array>
+</resources>
