@@ -54,7 +54,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void initData() {
 
-
         //设置pathSpinner的数据
         String[] pathItem = getResources().getStringArray(R.array.pathspinner);
         ArrayAdapter<String> pathAdapter=new ArrayAdapter<String>(this,android.R.layout.simple_spinner_item, pathItem);
@@ -127,13 +126,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             if (mMapview.getCenterPoint()==null){
 
                 mLl_path.setVisibility(View.GONE);
-               }
-           }
 
-        int width = mLl.getWidth();
-        int height = mLl.getHeight();
-        
-        System.out.println(width+":"+height);
+            }
+        }
     }
 
     @Override

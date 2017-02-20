@@ -13,6 +13,7 @@ import android.view.View;
 import android.widget.ImageView;
 
 import com.jiadu.mapdemo.MainActivity;
+import com.jiadu.mapdemo.util.LogUtil;
 import com.jiadu.mapdemo.util.MyDataBaseUtil;
 
 import java.util.ArrayList;
@@ -236,6 +237,7 @@ public class MapView extends ImageView {
         //初始化硬盘数据
         initDataFromDataBase();
 
+        LogUtil.debugLog("onfinish");
     }
 
     private void drawGridBitmap() {
@@ -329,7 +331,7 @@ public class MapView extends ImageView {
 
         int height = MeasureSpec.makeMeasureSpec(mViewHeight, MeasureSpec.EXACTLY);
 
-        super.onMeasure(widthMeasureSpec, widthMeasureSpec);
+        super.onMeasure(width, height);
     }
 
     @Override
