@@ -17,79 +17,83 @@ public class IMUDataUtil {
 		IMUDataBean bean = new IMUDataBean();
 		
 		int offset = 0;
-		
-		while(offset < len){
-			
-			byte cmd = bytes[offset];
-			
-			switch (cmd) {
-			
-			case 0x5A:			//帧头识别
-				
-				if (0xA5== bytes[offset+1]) {
-					
-					offset = offset +6;
-					
-				}
-				
-				break;
-			case FIELD_BEGIN://包头
-				
-				offset = offset +2;
-				
-				break;
-				
-			case FIELD_LINEAR_ACCELERATE: //线加速度
-				
-				bean.linearAcc[0] = (bytes[offset+2]<<8) +bytes[offset+1];
-				bean.linearAcc[1] = (bytes[offset+4]<<8) +bytes[offset+3];
-				bean.linearAcc[2] = (bytes[offset+6]<<8) +bytes[offset+5];
-				
-				offset = offset +7;
-				
-				break;
-			case FIELD_ANGLE_VELOCITY:   //角速度
-				
-				bean.angleVelocity[0] = (bytes[offset+2]<<8) +bytes[offset+1];
-				bean.angleVelocity[1] = (bytes[offset+4]<<8) +bytes[offset+3];
-				bean.angleVelocity[2] = (bytes[offset+6]<<8) +bytes[offset+5];
-				
-				offset = offset +7;
-				
-				break;
-			case FIELD_MAGNET:           //磁场强度
-				bean.magnet[0] = (bytes[offset+2]<<8) +bytes[offset+1];
-				bean.magnet[1] = (bytes[offset+4]<<8) +bytes[offset+3];
-				bean.magnet[2] = (bytes[offset+6]<<8) +bytes[offset+5];
-				offset = offset +7;		
-				
-				break;
-			case FIELD_RPY:				//姿态角
-				bean.pose[0] = (float) (((bytes[offset+2]<<8) +bytes[offset+1])*1.0/100);
-				bean.pose[1] = (float) (((bytes[offset+4]<<8) +bytes[offset+3])*1.0/100);
-				bean.pose[2] = (float) (((bytes[offset+6]<<8) +bytes[offset+5])*1.0/10);
-				
-				offset = offset +7;		
-				
-				break;
-			case FIELD_4META:			//4元素
-				
-				offset = offset+17;
-				
-				break;
-				
-			case FIELD_PRESURE:        //气压
-				
-				bean.pressure = bytes[offset+1] + bytes[offset+2]<<8+bytes[offset+3]<<16+bytes[offset+4]<<24;
-				
-				offset =offset +5;
-				
-				break;
+        
+		try {
 
-			default:
-				return bean;
+			while(offset < len){
+
+				byte cmd = bytes[offset];
+				switch (cmd) {
+
+                    case 0x5A:			//帧头识别
+                        
+                        if ((byte)0xA5 == bytes[offset+1]) {
+
+                            offset = offset +6;
+                        }
+
+                        break;
+                    case FIELD_BEGIN://包头
+
+                        offset = offset +2;
+
+                        break;
+
+                    case FIELD_LINEAR_ACCELERATE: //线加速度
+
+                        bean.linearAcc[0] = (bytes[offset+2]<<8) +bytes[offset+1];
+                        bean.linearAcc[1] = (bytes[offset+4]<<8) +bytes[offset+3];
+                        bean.linearAcc[2] = (bytes[offset+6]<<8) +bytes[offset+5];
+
+                        offset = offset +7;
+
+                        break;
+                    case FIELD_ANGLE_VELOCITY:   //角速度
+
+                        bean.angleVelocity[0] = (bytes[offset+2]<<8) +bytes[offset+1];
+                        bean.angleVelocity[1] = (bytes[offset+4]<<8) +bytes[offset+3];
+                        bean.angleVelocity[2] = (bytes[offset+6]<<8) +bytes[offset+5];
+
+                        offset = offset +7;
+
+                        break;
+                    case FIELD_MAGNET:           //磁场强度
+                        bean.magnet[0] = (bytes[offset+2]<<8) +bytes[offset+1];
+                        bean.magnet[1] = (bytes[offset+4]<<8) +bytes[offset+3];
+                        bean.magnet[2] = (bytes[offset+6]<<8) +bytes[offset+5];
+                        offset = offset +7;
+
+                        break;
+                    case FIELD_RPY:				//姿态角
+                        bean.pose[0] = (float) (((bytes[offset+2]<<8) +bytes[offset+1])*1.0/100);
+                        bean.pose[1] = (float) (((bytes[offset+4]<<8) +bytes[offset+3])*1.0/100);
+                        bean.pose[2] = (float) (((bytes[offset+6]<<8) +bytes[offset+5])*1.0/10);
+
+                        offset = offset +7;
+
+                        break;
+                    case FIELD_4META:			//4元素
+
+                        offset = offset+17;
+
+                        break;
+
+                    case FIELD_PRESURE:        //气压
+
+                        bean.pressure = bytes[offset+1] + bytes[offset+2]<<8+bytes[offset+3]<<16+bytes[offset+4]<<24;
+
+                        offset =offset +5;
+
+                        break;
+
+                    default:
+                        return bean;
+				}
 			}
+			return bean;
+		}catch (Exception e){
+			e.printStackTrace();
 		}
-		return bean;
+		return null;
 	}
 }

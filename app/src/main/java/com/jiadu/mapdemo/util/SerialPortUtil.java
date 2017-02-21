@@ -5,7 +5,6 @@ import com.jiadu.serialport.SerialPort;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 
 /**
@@ -16,20 +15,24 @@ public class SerialPortUtil {
      * Called when the activity is first created.
      */
 
-    private static String SERIALPORTNAME = "ttyUSB0";
+    private static String SERIALPORTNAME = "/dev/ttyUSB0";
 
-    FileOutputStream mOutputStream;
     FileInputStream mInputStream;
     SerialPort mSp;
     private boolean mFlag =true;
 
-    public IMUDataBean getBean() {
-        return mBean;
-    }
-
-    private IMUDataBean mBean = new IMUDataBean();
+    private IMUDataBean mBean = null;
     private static SerialPortUtil spu;
 
+    /**
+     * @return使用前需要调用openSerialPort(),否则返回null
+     */
+    public IMUDataBean getBean() {
+
+        IMUDataBean temp = mBean;
+        mBean =null;
+        return temp;
+    }
 
     public static SerialPortUtil getInstance(){
 
@@ -43,6 +46,10 @@ public class SerialPortUtil {
         return spu;
     }
 
+    /**
+     * 不使用,需要close(),释放资源
+     * @throws IOException
+     */
     public void openSerialPort() throws IOException {
 
         if (mInputStream!=null){
@@ -64,11 +71,11 @@ public class SerialPortUtil {
 
                             int read1 = mInputStream.read();
 
-                            if (read1 == 0x5A){
+                            if (read1 == 0x5A && mFlag){
 
                                 int read2 = mInputStream.read();
 
-                                if (read2 == 0xA5){
+                                if (read2 == 0xA5 && mFlag){
 
                                     int read3 = mInputStream.read();
                                     int read4 = mInputStream.read();
@@ -89,20 +96,25 @@ public class SerialPortUtil {
                         }
                     } catch (IOException e) {
 
-                        mBean = null;
                         e.printStackTrace();
                     }
                     finally {
-                        close();
+                        stopReceive();
                     }
                 }
             }
         }.start();
     }
-    
+
     public void close(){
+        mFlag = false;
+    }
+    
+    public void stopReceive(){
 
         mFlag =false;
+
+        mBean = null;
 
         if (mInputStream != null){
             try {
@@ -112,6 +124,10 @@ public class SerialPortUtil {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+
+        if (mSp !=null){
+            mSp.close();
         }
     }
 }

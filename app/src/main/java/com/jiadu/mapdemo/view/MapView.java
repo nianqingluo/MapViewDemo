@@ -534,8 +534,8 @@ public class MapView extends ImageView {
 
     public Path drawArrow(int sx, int sy, int ex, int ey)
     {
-        double H = 24; // 箭头高度
-        double L = 9; // 底边的一半
+        double H = 30; // 箭头高度
+        double L = 12; // 底边的一半
         int x3 = 0;
         int y3 = 0;
         int x4 = 0;

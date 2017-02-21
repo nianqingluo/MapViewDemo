@@ -2,6 +2,8 @@ package com.jiadu.mapdemo;
 
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.AdapterView;
@@ -9,12 +11,22 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
+import android.widget.TextView;
 
+import com.jiadu.bean.IMUDataBean;
+import com.jiadu.iinterface.IPresent;
+import com.jiadu.iinterface.IView;
+import com.jiadu.impl.PresentImpl;
 import com.jiadu.mapdemo.util.ToastUtils;
 import com.jiadu.mapdemo.view.MapView;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+import java.util.Timer;
+import java.util.TimerTask;
 
+public class MainActivity extends AppCompatActivity implements View.OnClickListener,IView{
+
+
+    private final int UPDATETV = 1;
     private Button mBt_magnify;
     private Button mBt_reduce;
     private MapView mMapview;
@@ -27,6 +39,46 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button mBt_deletePath;
     private Spinner mSp_scale;
     private View mLl;
+    private TextView mTv_linearacc_x;
+    private TextView mTv_linearacc_y;
+    private TextView mTv_linearacc_z;
+    private TextView mTv_anglevelocit_y;
+    private TextView mTv_anglevelocit_z;
+    private TextView mTv_anglevelocit_x;
+    private TextView mTv_magnet_x;
+    private TextView mTv_magnet_y;
+    private TextView mTv_magnet_z;
+    private TextView mTv_pitch;
+    private TextView mTv_roll;
+    private TextView mTv_yaw;
+    private TextView mTv_pressure;
+    private IPresent mIPresent ;
+    private Handler mHandler = new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+
+            switch (msg.what){
+                case UPDATETV:
+
+                    if (msg.obj == null){
+
+                        updata13TV(null);
+                    }else {
+
+                        IMUDataBean bean = (IMUDataBean) msg.obj;
+
+                        updata13TV(bean);
+
+                    }
+
+                    break;
+                default:
+                break;
+            }
+
+        }
+    };
+    private Timer mTimer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +105,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void initData() {
+
+        mIPresent = new PresentImpl(this);
 
         //设置pathSpinner的数据
         String[] pathItem = getResources().getStringArray(R.array.pathspinner);
@@ -106,6 +160,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         mBt_deletePath = (Button) findViewById(R.id.bt_deletepath);
 
+        mTv_linearacc_x = (TextView) findViewById(R.id.tv_linearacc_x);
+        mTv_linearacc_y = (TextView) findViewById(R.id.tv_linearacc_y);
+        mTv_linearacc_z = (TextView) findViewById(R.id.tv_linearacc_z);
+
+        mTv_anglevelocit_x = (TextView) findViewById(R.id.tv_anglevelocity_x);
+        mTv_anglevelocit_y = (TextView) findViewById(R.id.tv_anglevelocity_y);
+        mTv_anglevelocit_z = (TextView) findViewById(R.id.tv_anglevelocity_z);
+
+        mTv_magnet_x = (TextView) findViewById(R.id.tv_magnet_x);
+        mTv_magnet_y = (TextView) findViewById(R.id.tv_magnet_y);
+        mTv_magnet_z = (TextView) findViewById(R.id.tv_magnet_z);
+
+        mTv_pitch = (TextView) findViewById(R.id.tv_pitch);
+        mTv_roll = (TextView) findViewById(R.id.tv_roll);
+        mTv_yaw = (TextView) findViewById(R.id.tv_yaw);
+
+        mTv_pressure = (TextView) findViewById(R.id.tv_pressure);
+
         mBt_magnify.setOnClickListener(this);
         mBt_reduce.setOnClickListener(this);
         mBt_centerpoint.setOnClickListener(this);
@@ -114,8 +186,40 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         mMapview = (MapView) findViewById(R.id.mv_mapview);
 
-
         mLl = findViewById(R.id.ll);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        mIPresent.openIMUSerialPort();
+
+        mTimer = new Timer();
+
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+                IMUDataBean imuDataBean = mIPresent.getIMUDataBean();
+
+                Message msg = Message.obtain(mHandler,UPDATETV);
+
+                msg.obj = imuDataBean;
+                
+                msg.sendToTarget();
+            }
+        };
+
+        mTimer.schedule(task,100,100);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mIPresent.closeIMUSerialPort();
+
+        mTimer.cancel();
+        mTimer=null;
     }
 
     @Override
@@ -193,6 +297,52 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
               default:
               break;
+        }
+    }
+
+    @Override
+    public void updata13TV(IMUDataBean bean) {
+        
+        if (bean == null){
+
+            mTv_linearacc_x.setText("---");
+            mTv_linearacc_y.setText("---");
+            mTv_linearacc_z.setText("---");
+
+            mTv_anglevelocit_x.setText("---");
+            mTv_anglevelocit_y.setText("---");
+            mTv_anglevelocit_z.setText("---");
+
+            mTv_magnet_x.setText("---");
+            mTv_magnet_y.setText("---");
+            mTv_magnet_z.setText("---");
+
+            mTv_pitch.setText("---");
+            mTv_roll.setText("---");
+            mTv_yaw.setText("---");
+
+            mTv_pressure.setText("---");
+
+
+        }else {
+
+            mTv_linearacc_x.setText(bean.linearAcc[0] + "");
+            mTv_linearacc_y.setText(bean.linearAcc[1] + "");
+            mTv_linearacc_z.setText(bean.linearAcc[2] + "");
+
+            mTv_anglevelocit_x.setText(bean.angleVelocity[0] + "");
+            mTv_anglevelocit_y.setText(bean.angleVelocity[1] + "");
+            mTv_anglevelocit_z.setText(bean.angleVelocity[2] + "");
+
+            mTv_magnet_x.setText(bean.magnet[0] + "");
+            mTv_magnet_y.setText(bean.magnet[1] + "");
+            mTv_magnet_z.setText(bean.magnet[2] + "");
+
+            mTv_pitch.setText(bean.pose[0] + "°");
+            mTv_roll.setText(bean.pose[1] + "°");
+            mTv_yaw.setText(bean.pose[2] + "°");
+
+            mTv_pressure.setText(bean.pressure + "Pa");
         }
     }
 }

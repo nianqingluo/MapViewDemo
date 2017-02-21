@@ -144,6 +144,10 @@
                     style="@style/textstyle"
                     android:text="航向角(Yaw):"
                     />
+                <TextView
+                    style="@style/textstyle"
+                    android:text="大气压:"
+                    />
             </LinearLayout>
             
             <LinearLayout
@@ -211,6 +215,11 @@
                     style="@style/textstyle"
                     android:id="@+id/tv_yaw"
                     android:text="航向角:"
+                    />
+                <TextView
+                    style="@style/textstyle"
+                    android:id="@+id/tv_pressure"
+                    android:text="大气压:"
                     />
             </LinearLayout>
         </LinearLayout>
