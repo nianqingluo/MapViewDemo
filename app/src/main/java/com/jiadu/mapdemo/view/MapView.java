@@ -13,7 +13,7 @@ import android.view.View;
 import android.widget.ImageView;
 
 import com.jiadu.mapdemo.MainActivity;
-import com.jiadu.mapdemo.util.LogUtil;
+import com.jiadu.mapdemo.R;
 import com.jiadu.mapdemo.util.MyDataBaseUtil;
 
 import java.util.ArrayList;
@@ -30,8 +30,8 @@ public class MapView extends ImageView {
     public static final int TYPE_PATH2 = 2;
     public static final int TYPE_PATH3 = 3;
 
-    private int mViewWidth = 1080;
-    private int mViewHeight = 1080;
+    private int mViewWidth ;
+    private int mViewHeight ;
     private int mGridWidth = 40;
     private Bitmap mGridBitmap;
     private Paint mPaint;
@@ -61,6 +61,14 @@ public class MapView extends ImageView {
 
     private MyDataBaseUtil mDbUtil;
     private Paint mArrowPaint;
+
+    private boolean hadDrawGridBitmap = false;
+
+    private int mPathNum =1;
+
+    public void setPathNum(int pathNum) {
+        mPathNum = pathNum;
+    }
 
     public void addPathPoint(int pathNum, Point point){
         Point point1 = transferCoordinate(point);
@@ -214,7 +222,9 @@ public class MapView extends ImageView {
 
     public MapView(Context context, AttributeSet attrs) {
         super(context, attrs);
+
         mContext = (MainActivity) context;
+
         mPaint = new Paint();
 
         mPathPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -232,12 +242,11 @@ public class MapView extends ImageView {
     protected void onFinishInflate() {
         super.onFinishInflate();
         //画网格的bitmap
-        drawGridBitmap();
+//        drawGridBitmap();
 
         //初始化硬盘数据
         initDataFromDataBase();
 
-        LogUtil.debugLog("onfinish");
     }
 
     private void drawGridBitmap() {
@@ -327,16 +336,26 @@ public class MapView extends ImageView {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 
-        int width = MeasureSpec.makeMeasureSpec(mViewWidth, MeasureSpec.EXACTLY);
+//        int width = MeasureSpec.makeMeasureSpec(mViewWidth, MeasureSpec.EXACTLY);
+//
+//        int height = MeasureSpec.makeMeasureSpec(mViewHeight, MeasureSpec.EXACTLY);
 
-        int height = MeasureSpec.makeMeasureSpec(mViewHeight, MeasureSpec.EXACTLY);
-
-        super.onMeasure(width, height);
+        super.onMeasure(heightMeasureSpec, heightMeasureSpec);
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
+        
+        
+        if (!hadDrawGridBitmap){
 
+            hadDrawGridBitmap=true;
+
+            mViewWidth = getWidth();
+            mViewHeight = getHeight();
+            drawGridBitmap();
+        }
+        
         canvas.save();
 
         canvas.scale(mScale,mScale,mViewWidth/2,mViewHeight/2);
@@ -488,20 +507,22 @@ public class MapView extends ImageView {
             case MotionEvent.ACTION_DOWN:
 
                 if(isCanSetCenterPoint()){//说明是要设置原点
+
                     float x = event.getX();
                     float y = event.getY();
 
                     setCenterPoint(new Point((int)(x+0.5),(int)(y+0.5)));
 
-                    mContext.mLl_path.setVisibility(View.VISIBLE);
+                    mContext.findViewById(R.id.ll_path).setVisibility(View.VISIBLE);
 
+                    //                    mContext.mLl_path.setVisibility(View.VISIBLE);
                     setCanSetCenterPoint(false);
                     return false;
                 }else if(isCanSetPath()){//说明是要设置路径
                     float x = event.getX();
                     float y = event.getY();
 
-                    addPathPoint(mContext.path,new Point((int)(x+0.5),(int)(y+0.5)));
+                    addPathPoint(mPathNum,new Point((int)(x+0.5),(int)(y+0.5)));
                     return false;
                 }
                 else {//说明不是在设置原点
@@ -583,4 +604,5 @@ public class MapView extends ImageView {
         }
         return mathstr;
     }
+
 }

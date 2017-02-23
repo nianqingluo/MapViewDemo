@@ -30,10 +30,6 @@ public class SerialPortUtil {
     public IMUDataBean getBean() {
 
         IMUDataBean temp = mBean;
-        if (temp!=null){
-
-            LogUtil.debugLog("航向角:"+mBean.pose[2]);
-        }
         mBean =null;
         return temp;
     }
@@ -95,9 +91,7 @@ public class SerialPortUtil {
 
                                         int read = mInputStream.read();
                                         bts[i] = (byte) read;
-                                        
                                     }
-
                                     mBean = IMUDataUtil.getData(bts, total);
                                 }
                             }

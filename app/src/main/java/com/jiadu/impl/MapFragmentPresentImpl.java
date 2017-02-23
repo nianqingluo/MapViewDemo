@@ -10,12 +10,12 @@ import java.io.IOException;
 /**
  * Created by Administrator on 2017/2/21.
  */
-public class PresentImpl implements IPresent {
+public class MapFragmentPresentImpl implements IPresent {
 
     private IView mIView;
     private SerialPortUtil spu;
 
-    public PresentImpl(IView iView) {
+    public MapFragmentPresentImpl(IView iView) {
         mIView = iView;
         spu = SerialPortUtil.getInstance();
     }

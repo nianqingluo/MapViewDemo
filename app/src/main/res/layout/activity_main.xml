@@ -3,240 +3,53 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="horizontal"
-    android:id="@+id/ll"
+    android:orientation="vertical"
     >
-    <LinearLayout
-        android:layout_width="420px"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        >
-
-        <Button
-            android:layout_marginLeft="10dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="放大"
-            android:id="@+id/bt_magnify"
-            />
-        <Button
-            android:layout_marginLeft="10dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/bt_reduce"
-            android:text="缩小"
-            />
-        <Button
-            android:layout_marginLeft="10dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/bt_centerpoint"
-            android:text="设置原点"
-            />
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:id="@+id/ll_path"
-            >
-            <Button
-                android:layout_marginLeft="10dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/bt_path"
-                android:text="设置路径"
-                />
-
-            <Spinner
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/sp_path"
-                >
-
-            </Spinner>
-            <Button
-                android:layout_marginLeft="10dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/bt_deletepath"
-                android:text="删除路径点"
-                />
-
-        </LinearLayout>
-        <Spinner
-            android:layout_marginLeft="10dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/sp_scale"
-            >
-
-        </Spinner>
-
-    </LinearLayout>
-
-    <com.jiadu.mapdemo.view.MapView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="#ded9c3"
-        android:id="@+id/mv_mapview"
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="100px"
+        android:background="#cccc8c"
         />
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
+        android:orientation="horizontal"
         >
+
         <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
+            android:layout_width="470px"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
             >
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                >
-                <TextView
-                    style="@style/textstyle"
-                    android:text="加速度X:"
-                    />
-                <TextView
-                    style="@style/textstyle"
-                    android:text="加速度Y:"
-                    />
-                <TextView
-                    style="@style/textstyle"
-                    android:text="加速度Z:"
-                    />
-                <TextView
-                    style="@style/textstyle"
-                    android:text="角速度X:"
-                    />
-                <TextView
-                    style="@style/textstyle"
-                    android:text="角速度Y:"
-                    />
-                <TextView
-                    style="@style/textstyle"
-                    android:text="角速度Z:"
-                    />
-                <TextView
-                    style="@style/textstyle"
-                    android:text="磁场强度X:"
-                    />
-                <TextView
-                    style="@style/textstyle"
-                    android:text="磁场强度Y:"
-                    />
-                <TextView
-                    style="@style/textstyle"
-                    android:text="磁场强度Z:"
-                    />
-                <TextView
-                    style="@style/textstyle"
-                    android:text="俯仰角(Pitch):"
-                    />
-                <TextView
-                    style="@style/textstyle"
-                    android:text="横滚角(Roll):"
-                    />
-                <TextView
-                    style="@style/textstyle"
-                    android:text="航向角(Yaw):"
-                    />
-                <TextView
-                    style="@style/textstyle"
-                    android:text="大气压:"
-                    />
-            </LinearLayout>
-            
-            <LinearLayout
-                android:paddingLeft="20dp"
+
+            <Button
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                >
-                <TextView
-                    style="@style/textstyle"
-                    android:id="@+id/tv_linearacc_x"
-                    android:text="---"
-                    />
-                <TextView
-                    style="@style/textstyle"
-                    android:id="@+id/tv_linearacc_y"
-                    android:text="---"
-                    />
-                <TextView
-                    style="@style/textstyle"
-                    android:id="@+id/tv_linearacc_z"
-                    android:text="---"
-                    />
-                <TextView
-                    style="@style/textstyle"
-                    android:id="@+id/tv_anglevelocity_x"
-                    android:text="---"
-                    />
-                <TextView
-                    style="@style/textstyle"
-                    android:id="@+id/tv_anglevelocity_y"
-                    android:text="---"
-                    />
-                <TextView
-                    style="@style/textstyle"
-                    android:id="@+id/tv_anglevelocity_z"
-                    android:text="---"
-                    />
-                <TextView
-                    android:id="@+id/tv_magnet_x"
-                    style="@style/textstyle"
-                    android:text="---"
-                    />
-                <TextView
-                    style="@style/textstyle"
-                    android:id="@+id/tv_magnet_y"
-                    android:text="---"
-                    />
-                <TextView
-                    style="@style/textstyle"
-                    android:id="@+id/tv_magnet_z"
-                    android:text="---"
-                    />
-                <TextView
-                    style="@style/textstyle"
-                    android:id="@+id/tv_pitch"
-                    android:text="---"
-                    />
-                <TextView
-                    style="@style/textstyle"
-                    android:id="@+id/tv_roll"
-                    android:text="---"
-                    />
-                <TextView
-                    style="@style/textstyle"
-                    android:id="@+id/tv_yaw"
-                    android:text="---"
-                    />
-                <TextView
-                    style="@style/textstyle"
-                    android:id="@+id/tv_pressure"
-                    android:text="---"
-                    />
-            </LinearLayout>
+                android:layout_height="100px"
+                android:id="@+id/bt_power"
+                android:text="电源"
+                />
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="100px"
+                android:id="@+id/bt_clean"
+                android:text="清洁"
+                />
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="100px"
+                android:id="@+id/bt_map"
+                android:text="地图"
+                />
+
         </LinearLayout>
-        <LinearLayout
+        
+        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="horizontal"
+            android:id="@+id/fl_fragment"
             >
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingLeft="5dp"
-                android:textSize="20sp"
-                android:lineSpacingExtra="10dp"
-                android:text="加速度单位:  0.000244 G\n角速度单位:  0.061035 °/s\n地磁场单位:  6.000000 Gauss
-                "
-                />
-        </LinearLayout>
+
+        </FrameLayout>
     </LinearLayout>
+
 </LinearLayout>
