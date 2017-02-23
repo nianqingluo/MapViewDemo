@@ -9,6 +9,9 @@ public interface IView {
 
     public void updata13TV(IMUDataBean bean);
 
+    public void showChoicePathDialog();
+
+    public void showChoiceScaleDialog();
 //    public void magnifyMapView();
 //
 //    public void reduceMapView();

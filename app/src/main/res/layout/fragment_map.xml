@@ -17,6 +17,82 @@
         android:orientation="vertical"
         >
         <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            >
+
+            <Button
+                android:layout_marginLeft="10dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="放大"
+                android:textSize="20sp"
+                android:id="@+id/bt_magnify"
+                />
+            <Button
+                android:layout_marginLeft="10dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/bt_reduce"
+                android:textSize="20sp"
+                android:text="缩小"
+                />
+            <Button
+                android:layout_marginLeft="10dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/bt_centerpoint"
+                android:textSize="20sp"
+                android:text="设置原点"
+                />
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:id="@+id/ll_path"
+                >
+                <Button
+                    android:layout_marginLeft="10dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/bt_path"
+                     android:textSize="20sp"
+                    android:text="设置路径"
+                    />
+
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="20sp"
+                    android:text="选择路线"
+                    android:id="@+id/bt_choicepath"
+                    >
+
+                </Button>
+                <Button
+                    android:layout_marginLeft="10dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/bt_deletepath"
+                    android:textSize="20sp"
+                    android:text="删除路径点"
+                    />
+            </LinearLayout>
+
+            <Button
+                android:layout_marginLeft="10dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="20sp"
+                android:text="选择比例尺"
+                android:id="@+id/bt_scale"
+                >
+            </Button>
+
+        </LinearLayout>
+
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
@@ -164,73 +240,10 @@
                 android:paddingLeft="5dp"
                 android:textSize="20sp"
                 android:lineSpacingExtra="10dp"
-                android:text="加速度单位:  0.000244 G\n角速度单位:  0.061035 °/s\n地磁场单位:  6.000000 Gauss
+                android:text="加速度单位:  0.000244 G\n角速度单位:  0.061035 °/s\n地磁场单位:  0.006000 Gauss
                 "
                 />
         </LinearLayout>
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            >
-
-            <Button
-                android:layout_marginLeft="10dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="放大"
-                android:id="@+id/bt_magnify"
-                />
-            <Button
-                android:layout_marginLeft="10dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/bt_reduce"
-                android:text="缩小"
-                />
-            <Button
-                android:layout_marginLeft="10dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/bt_centerpoint"
-                android:text="设置原点"
-                />
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:id="@+id/ll_path"
-                >
-                <Button
-                    android:layout_marginLeft="10dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/bt_path"
-                    android:text="设置路径"
-                    />
-
-                <Spinner
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/sp_path"
-                    >
-
-                </Spinner>
-                <Button
-                    android:layout_marginLeft="10dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/bt_deletepath"
-                    android:text="删除路径点"
-                    />
-            </LinearLayout>
-            <Spinner
-                android:layout_marginLeft="10dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/sp_scale"
-                >
-            </Spinner>
-        </LinearLayout>
     </LinearLayout>
+
 </LinearLayout>

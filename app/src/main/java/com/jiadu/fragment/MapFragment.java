@@ -1,5 +1,6 @@
 package com.jiadu.fragment;
 
+import android.app.DialogFragment;
 import android.app.Fragment;
 import android.os.Bundle;
 import android.os.Handler;
@@ -8,11 +9,8 @@ import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.LinearLayout;
-import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.jiadu.bean.IMUDataBean;
@@ -36,13 +34,15 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
     private Button mBt_reduce;
     private MapView mMapview;
     private Button mBt_centerpoint;
-    private Button mBt_path;
+    private Button mBt_setpath;
     private boolean isSetPath;
-    public int path = 1;
+
+
+    public int mPath = 1;
     public LinearLayout mLl_path;
-    private Spinner mSp_path;
+    private Button mBt_choicepath;
     private Button mBt_deletePath;
-    private Spinner mSp_scale;
+    private Button mBt_scale;
     private TextView mTv_linearacc_x;
     private TextView mTv_linearacc_y;
     private TextView mTv_linearacc_z;
@@ -83,9 +83,15 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
         }
     };
 
+    public void setPath(int path) {
+        this.mPath = path;
+        mMapview.setPathNum(path);
+    }
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+
 
         if (mRootView!=null){
 
@@ -105,40 +111,9 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
 
         mIPresent = new MapFragmentPresentImpl(this);
 
-        //设置pathSpinner的数据
-        String[] pathItem = getResources().getStringArray(R.array.pathspinner);
-        ArrayAdapter<String> pathAdapter=new ArrayAdapter<String>(getActivity(),android.R.layout.simple_spinner_item, pathItem);
-        pathAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        mSp_path .setAdapter(pathAdapter);
-        mSp_path.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view,
-                                       int pos, long id) {
 
-                path = pos+1;
-                mMapview.setPathNum(path);
-            }
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                // Another interface callback
-            }
-        });
 
-        //设置scaleSpinner的数据
-        String[] scaleItem = getResources().getStringArray(R.array.scalespinner);
-        ArrayAdapter<String> scaleAdapter=new ArrayAdapter<String>(getActivity(),android.R.layout.simple_spinner_item, scaleItem);
-        pathAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        mSp_scale .setAdapter(scaleAdapter);
-        mSp_scale.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view,
-                                       int pos, long id) {
-            }
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                // Another interface callback
-            }
-        });
+
     }
 
     private void initView() {
@@ -149,13 +124,13 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
 
         mBt_centerpoint = (Button) findViewById(R.id.bt_centerpoint);
 
-        mBt_path = (Button) findViewById(R.id.bt_path);
+        mBt_setpath = (Button) findViewById(R.id.bt_path);
 
         mLl_path = (LinearLayout) findViewById(R.id.ll_path);
 
-        mSp_path = (Spinner) findViewById(R.id.sp_path);
+        mBt_choicepath = (Button) findViewById(R.id.bt_choicepath);
 
-        mSp_scale = (Spinner) findViewById(R.id.sp_scale);
+        mBt_scale = (Button) findViewById(R.id.bt_scale);
 
         mBt_deletePath = (Button) findViewById(R.id.bt_deletepath);
 
@@ -180,8 +155,10 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
         mBt_magnify.setOnClickListener(this);
         mBt_reduce.setOnClickListener(this);
         mBt_centerpoint.setOnClickListener(this);
-        mBt_path.setOnClickListener(this);
+        mBt_setpath.setOnClickListener(this);
         mBt_deletePath.setOnClickListener(this);
+        mBt_scale.setOnClickListener(this);
+        mBt_choicepath.setOnClickListener(this);
 
         mMapview = (MapView) findViewById(R.id.mv_mapview);
     }
@@ -269,7 +246,7 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
             case R.id.bt_path:
 
                 isSetPath = !isSetPath;
-                mBt_path.setText(isSetPath?"完成设置":"设置路径");
+                mBt_setpath.setText(isSetPath?"完成设置":"设置路径");
                 if (isSetPath){
                     mMapview.setCanSetPath(true);
                     mMapview.setCanSetCenterPoint(false);
@@ -284,8 +261,18 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
                     ToastUtils.makeToast(getActivity(),"请先点击设置路径");
                     return;
                 }
-                mMapview.deletePathPoint(path);
+                mMapview.deletePathPoint(mPath);
                 break;
+            case R.id.bt_choicepath:
+
+                showChoicePathDialog();
+
+                break;
+            case R.id.bt_scale:
+
+                showChoiceScaleDialog();
+                break;
+
             default:
                 break;
         }
@@ -295,8 +282,10 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
     @Override
     public void onPause() {
         mIPresent.closeIMUSerialPort();
-        mTimer.cancel();
-        mTimer=null;
+        if (mTimer!=null){
+            mTimer.cancel();
+            mTimer=null;
+        }
         super.onPause();
     }
 
@@ -344,6 +333,24 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
 
             mTv_pressure.setText(bean.pressure + "Pa");
         }
+
+    }
+
+    @Override
+    public void showChoicePathDialog() {
+
+        DialogFragment choicePath = new ChoicePathDialog();
+
+
+        choicePath.show(getActivity().getFragmentManager(),"choicepath");
+
+    }
+
+    @Override
+    public void showChoiceScaleDialog() {
+
+        DialogFragment choiceScale = new ChoiceScaleDialog();
+        choiceScale.show(getActivity().getFragmentManager(),"choicescale");
 
     }
 }

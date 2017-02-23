@@ -12,12 +12,16 @@ import android.widget.Button;
 import com.jiadu.fragment.CleanFragment;
 import com.jiadu.fragment.MapFragment;
 import com.jiadu.fragment.PowerFragment;
+import com.jiadu.mapdemo.util.LogUtil;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
 
+
+
+    private int mMapScale= 0;
 
     private Button mBt_map;
     private Button mBt_clean;
@@ -72,11 +76,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
-
-
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
+
+        LogUtil.debugLog("hasFocus:"+hasFocus);
 
         if (hasFocus && Build.VERSION.SDK_INT >= 19) {
             View decorView = getWindow().getDecorView();
@@ -89,26 +93,32 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
         }
     }
+    public void setMapScale(int mapScale) {
+        mMapScale = mapScale;
+    }
 
+    public int getMapScale() {
+        return mMapScale;
+    }
     @Override
     public void onClick(View v) {
 
         switch (v.getId()){
             case R.id.bt_power:{
                 FragmentTransaction transaction = mFM.beginTransaction();
-                transaction.replace(R.id.fl_fragment,mFragmentMap.get("power"));
+                transaction.replace(R.id.fl_fragment,mFragmentMap.get("power"),"power");
                 transaction.commit();
             }
             break;
             case R.id.bt_clean:{
                 FragmentTransaction transaction = mFM.beginTransaction();
-                transaction.replace(R.id.fl_fragment,mFragmentMap.get("clean"));
+                transaction.replace(R.id.fl_fragment,mFragmentMap.get("clean"),"clean");
                 transaction.commit();
             }
             break;
             case R.id.bt_map:{
                 FragmentTransaction transaction = mFM.beginTransaction();
-                transaction.replace(R.id.fl_fragment,mFragmentMap.get("map"));
+                transaction.replace(R.id.fl_fragment,mFragmentMap.get("map"),"map");
                 transaction.commit();
             }
                 break;
