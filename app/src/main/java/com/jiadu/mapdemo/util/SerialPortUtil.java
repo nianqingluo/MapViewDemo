@@ -30,6 +30,10 @@ public class SerialPortUtil {
     public IMUDataBean getBean() {
 
         IMUDataBean temp = mBean;
+        if (temp!=null){
+
+            LogUtil.debugLog("航向角:"+mBean.pose[2]);
+        }
         mBean =null;
         return temp;
     }
@@ -50,7 +54,7 @@ public class SerialPortUtil {
      * 不使用,需要close(),释放资源
      * @throws IOException
      */
-    public void openSerialPort() throws IOException {
+    public void openSerialPort() throws IOException,SecurityException {
 
         if (mInputStream!=null){
             return;
@@ -88,8 +92,12 @@ public class SerialPortUtil {
                                     int total = (read4<<8)+read3;
                                     byte[] bts = new byte[total];
                                     for (int i = 0; i<total;i++){
-                                        bts[i] = (byte) mInputStream.read();
+
+                                        int read = mInputStream.read();
+                                        bts[i] = (byte) read;
+                                        
                                     }
+
                                     mBean = IMUDataUtil.getData(bts, total);
                                 }
                             }

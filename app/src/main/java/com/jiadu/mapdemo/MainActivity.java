@@ -193,7 +193,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onResume() {
         super.onResume();
 
-        mIPresent.openIMUSerialPort();
+        try {
+            mIPresent.openIMUSerialPort();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return;
+        }
 
         mTimer = new Timer();
 
@@ -210,14 +215,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         };
 
-        mTimer.schedule(task,100,100);
+        mTimer.schedule(task,0,200);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         mIPresent.closeIMUSerialPort();
-
         mTimer.cancel();
         mTimer=null;
     }
@@ -344,5 +348,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             mTv_pressure.setText(bean.pressure + "Pa");
         }
+    }
+
+    @Override
+    public void finish() {
+        super.finish();
+        mIPresent.closeIMUSerialPort();
+
+        System.exit(1);
     }
 }

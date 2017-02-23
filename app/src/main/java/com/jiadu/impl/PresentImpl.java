@@ -29,12 +29,10 @@ public class PresentImpl implements IPresent {
     }
 
     @Override
-    public void openIMUSerialPort() {
-        try {
+    public void openIMUSerialPort() throws IOException {
+
             spu.openSerialPort();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
     }
 
     @Override

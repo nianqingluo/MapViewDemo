@@ -159,67 +159,67 @@
                 <TextView
                     style="@style/textstyle"
                     android:id="@+id/tv_linearacc_x"
-                    android:text="加速度X:"
+                    android:text="---"
                     />
                 <TextView
                     style="@style/textstyle"
                     android:id="@+id/tv_linearacc_y"
-                    android:text="加速度Y:"
+                    android:text="---"
                     />
                 <TextView
                     style="@style/textstyle"
                     android:id="@+id/tv_linearacc_z"
-                    android:text="加速度Z:"
+                    android:text="---"
                     />
                 <TextView
                     style="@style/textstyle"
                     android:id="@+id/tv_anglevelocity_x"
-                    android:text="角速度X:"
+                    android:text="---"
                     />
                 <TextView
                     style="@style/textstyle"
                     android:id="@+id/tv_anglevelocity_y"
-                    android:text="角速度Y:"
+                    android:text="---"
                     />
                 <TextView
                     style="@style/textstyle"
                     android:id="@+id/tv_anglevelocity_z"
-                    android:text="角速度Z:"
+                    android:text="---"
                     />
                 <TextView
                     android:id="@+id/tv_magnet_x"
                     style="@style/textstyle"
-                    android:text="磁场强度X:"
+                    android:text="---"
                     />
                 <TextView
                     style="@style/textstyle"
                     android:id="@+id/tv_magnet_y"
-                    android:text="磁场强度Y:"
+                    android:text="---"
                     />
                 <TextView
                     style="@style/textstyle"
                     android:id="@+id/tv_magnet_z"
-                    android:text="磁场强度Z:"
+                    android:text="---"
                     />
                 <TextView
                     style="@style/textstyle"
                     android:id="@+id/tv_pitch"
-                    android:text="俯仰角:"
+                    android:text="---"
                     />
                 <TextView
                     style="@style/textstyle"
                     android:id="@+id/tv_roll"
-                    android:text="横滚角:"
+                    android:text="---"
                     />
                 <TextView
                     style="@style/textstyle"
                     android:id="@+id/tv_yaw"
-                    android:text="航向角:"
+                    android:text="---"
                     />
                 <TextView
                     style="@style/textstyle"
                     android:id="@+id/tv_pressure"
-                    android:text="大气压:"
+                    android:text="---"
                     />
             </LinearLayout>
         </LinearLayout>

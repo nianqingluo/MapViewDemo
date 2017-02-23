@@ -41,33 +41,45 @@ public class IMUDataUtil {
 
                     case FIELD_LINEAR_ACCELERATE: //线加速度
 
-                        bean.linearAcc[0] = (bytes[offset+2]<<8) +bytes[offset+1];
-                        bean.linearAcc[1] = (bytes[offset+4]<<8) +bytes[offset+3];
-                        bean.linearAcc[2] = (bytes[offset+6]<<8) +bytes[offset+5];
+//                        bean.linearAcc[0] = (bytes[offset+2]<<8) +bytes[offset+1];
+                        bean.linearAcc[0] = (bytes[offset+2]<<8)|byteToUnsignedInt(bytes[offset+1]);
+//                        bean.linearAcc[1] = (bytes[offset+4]<<8) +bytes[offset+3];
+                        bean.linearAcc[1] = (bytes[offset+4]<<8)|byteToUnsignedInt(bytes[offset+3]);
+//                        bean.linearAcc[2] = (bytes[offset+6]<<8) +bytes[offset+5];
+                        bean.linearAcc[2] = (bytes[offset+6]<<8)|byteToUnsignedInt(bytes[offset+5]);
 
                         offset = offset +7;
 
                         break;
                     case FIELD_ANGLE_VELOCITY:   //角速度
 
-                        bean.angleVelocity[0] = (bytes[offset+2]<<8) +bytes[offset+1];
-                        bean.angleVelocity[1] = (bytes[offset+4]<<8) +bytes[offset+3];
-                        bean.angleVelocity[2] = (bytes[offset+6]<<8) +bytes[offset+5];
+//                        bean.angleVelocity[0] = (bytes[offset+2]<<8) +bytes[offset+1];
+                        bean.angleVelocity[0] = (bytes[offset+2]<<8)|byteToUnsignedInt(bytes[offset+1]);
+//                        bean.angleVelocity[1] = (bytes[offset+4]<<8) +bytes[offset+3];
+                        bean.angleVelocity[1] = (bytes[offset+4]<<8)|byteToUnsignedInt(bytes[offset+3]);
+//                        bean.angleVelocity[2] = (bytes[offset+6]<<8) +bytes[offset+5];
+                        bean.angleVelocity[2] = (bytes[offset+6]<<8)|byteToUnsignedInt(bytes[offset+5]);
 
                         offset = offset +7;
 
                         break;
                     case FIELD_MAGNET:           //磁场强度
-                        bean.magnet[0] = (bytes[offset+2]<<8) +bytes[offset+1];
-                        bean.magnet[1] = (bytes[offset+4]<<8) +bytes[offset+3];
-                        bean.magnet[2] = (bytes[offset+6]<<8) +bytes[offset+5];
+//                        bean.magnet[0] = (bytes[offset+2]<<8) +bytes[offset+1];
+                        bean.magnet[0] = (bytes[offset+2]<<8)|byteToUnsignedInt(bytes[offset+1]);
+//                        bean.magnet[1] = (bytes[offset+4]<<8) +bytes[offset+3];
+                        bean.magnet[1] = (bytes[offset+4]<<8)|byteToUnsignedInt(bytes[offset+3]);
+//                        bean.magnet[2] = (bytes[offset+6]<<8) +bytes[offset+5];
+                        bean.magnet[2] = (bytes[offset+6]<<8)|byteToUnsignedInt(bytes[offset+5]);
                         offset = offset +7;
 
                         break;
                     case FIELD_RPY:				//姿态角
-                        bean.pose[0] = (float) (((bytes[offset+2]<<8) +bytes[offset+1])*1.0/100);
-                        bean.pose[1] = (float) (((bytes[offset+4]<<8) +bytes[offset+3])*1.0/100);
-                        bean.pose[2] = (float) (((bytes[offset+6]<<8) +bytes[offset+5])*1.0/10);
+//                        bean.pose[0] = (float) (((bytes[offset+2]<<8) +bytes[offset+1])*1.0/100);
+                        bean.pose[0] = (float) (((bytes[offset+2]<<8)|byteToUnsignedInt(bytes[offset+1]))*1.0/100);
+//                        bean.pose[1] = (float) (((bytes[offset+4]<<8) +bytes[offset+3])*1.0/100);
+                        bean.pose[1] = (float) (((bytes[offset+4]<<8)|byteToUnsignedInt(bytes[offset+3]))*1.0/100);
+//                        bean.pose[2] = (float) (((bytes[offset+6]<<8) +bytes[offset+5])*1.0/10);
+                        bean.pose[2] = (float) (((bytes[offset+6]<<8)|byteToUnsignedInt(bytes[offset+5]))*1.0/10);
 
                         offset = offset +7;
 
@@ -96,4 +108,8 @@ public class IMUDataUtil {
 		}
 		return null;
 	}
+    private static int byteToUnsignedInt(byte bt){
+
+        return (((int)bt)&0xff);
+    }
 }
