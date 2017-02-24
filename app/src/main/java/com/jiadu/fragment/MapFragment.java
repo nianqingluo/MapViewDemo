@@ -75,6 +75,7 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
 
                         updata13TV(bean);
 
+                        mMapview.setDirectionAngle(bean.pose[2]);
                     }
                     break;
                 default:
@@ -82,6 +83,7 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
             }
         }
     };
+    private Button mBt_setrobotpoint;
 
     public void setPath(int path) {
         this.mPath = path;
@@ -152,6 +154,9 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
 
         mTv_pressure = (TextView) findViewById(R.id.tv_pressure);
 
+        mBt_setrobotpoint = (Button) findViewById(R.id.bt_setrobotpoint);
+
+        mBt_setrobotpoint.setOnClickListener(this);
         mBt_magnify.setOnClickListener(this);
         mBt_reduce.setOnClickListener(this);
         mBt_centerpoint.setOnClickListener(this);
@@ -271,6 +276,12 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
             case R.id.bt_scale:
 
                 showChoiceScaleDialog();
+                break;
+
+            case R.id.bt_setrobotpoint:
+
+                mMapview.setCanSetRobortPoint(true);
+
                 break;
 
             default:

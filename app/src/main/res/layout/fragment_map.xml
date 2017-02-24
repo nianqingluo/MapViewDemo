@@ -4,12 +4,26 @@
               android:layout_width="match_parent"
               android:layout_height="match_parent">
 
-    <com.jiadu.mapdemo.view.MapView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="#ded9c3"
-        android:id="@+id/mv_mapview"
-        />
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+
+        <com.jiadu.mapdemo.view.MapView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#ded9c3"
+            android:id="@+id/mv_mapview"
+            />
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@mipmap/compass"
+            />
+
+
+    </RelativeLayout>
+
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -78,6 +92,15 @@
                     android:textSize="20sp"
                     android:text="删除路径点"
                     />
+                <Button
+                    android:layout_marginLeft="10dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/bt_setrobotpoint"
+                    android:textSize="20sp"
+                    android:text="设置机器人位置"
+                    />
+
             </LinearLayout>
 
             <Button

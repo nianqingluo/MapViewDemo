@@ -2,8 +2,10 @@ package com.jiadu.mapdemo.view;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Point;
@@ -38,6 +40,10 @@ public class MapView extends ImageView {
     private Paint mPathPaint;
     private Point mCenterPoint = null;
     private boolean canSetCenterPoint = false;
+    private Point mRobortPoint = new Point();  //记录robort在地图中的位置
+
+    private float mDirectionAngle = 0;
+
     private boolean canSetPath = false;
     private float mScale = 1;     //地图缩放比例
     private float mTranslateX = 0;//X平移的距离
@@ -65,13 +71,70 @@ public class MapView extends ImageView {
     private boolean hadDrawGridBitmap = false;
 
     private int mPathNum =1;
+    private Bitmap mRobortBitMap;
+
+    private boolean canSetRobortPoint = false;
+
+    public boolean isCanSetRobortPoint() {
+        return canSetRobortPoint;
+    }
+
+    public void setCanSetRobortPoint(boolean canSetRobortPoint) {
+        this.canSetRobortPoint = canSetRobortPoint;
+    }
+
+
+
+    /**
+     * @param point:在map中的点
+     */
+    public void setRobortPointInMap(Point point){
+
+        mRobortPoint = point;
+        invalidate();
+    }
+
+
+    /**
+     * @param point:在View位置中的点
+     */
+    public void setRobortPointInView(Point point){
+
+        Point point1 = transferCoordinateToMap(point);
+
+        mRobortPoint = point1;
+        invalidate();
+    }
+
+
+    /**
+     * @return robort在map中的点
+     */
+    public Point getRobortPointInMap(){
+
+        return mRobortPoint;
+    }
+
+    /**
+     * @return robor在View中的位置
+     */
+    public Point getRobortPointInView(){
+
+        return transferCoordinateToView(mRobortPoint);
+    }
+
+    public void setDirectionAngle(float directionAngle) {
+        this.mDirectionAngle = directionAngle;
+
+        invalidate();
+    }
 
     public void setPathNum(int pathNum) {
         mPathNum = pathNum;
     }
 
     public void addPathPoint(int pathNum, Point point){
-        Point point1 = transferCoordinate(point);
+        Point point1 = transferCoordinateToMap(point);
         mDbUtil.addPoint(point.x,point.y,pathNum);
         switch (pathNum){
             case 1:
@@ -121,7 +184,6 @@ public class MapView extends ImageView {
                     for (Point p:pathListAfterTransfer1) {
                         path1.lineTo(p.x,p.y);
                     }
-
 
                     path1Arrow = pointToArrow(pathListAfterTransfer1);
                 }
@@ -244,9 +306,10 @@ public class MapView extends ImageView {
         //画网格的bitmap
 //        drawGridBitmap();
 
+        mRobortBitMap = BitmapFactory.decodeResource(mContext.getResources(), R.mipmap.car);
+
         //初始化硬盘数据
         initDataFromDataBase();
-
     }
 
     private void drawGridBitmap() {
@@ -281,6 +344,8 @@ public class MapView extends ImageView {
         mDbUtil = new MyDataBaseUtil(mContext);
 
         mCenterPoint = mDbUtil.queryCenterPoint(TYPE_CENTERPOINT);
+
+        setRobortPointInMap(mCenterPoint);
 
         pathListAfterTransfer1 = mDbUtil.queryPathPoint(1);
         pathListAfterTransfer2 = mDbUtil.queryPathPoint(2);
@@ -336,17 +401,18 @@ public class MapView extends ImageView {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 
-//        int width = MeasureSpec.makeMeasureSpec(mViewWidth, MeasureSpec.EXACTLY);
-//
-//        int height = MeasureSpec.makeMeasureSpec(mViewHeight, MeasureSpec.EXACTLY);
+        int width = MeasureSpec.getSize(widthMeasureSpec);
 
-        super.onMeasure(heightMeasureSpec, heightMeasureSpec);
+        int height = MeasureSpec.getSize(heightMeasureSpec);
+
+        int temp=width>height?heightMeasureSpec:widthMeasureSpec;
+
+        super.onMeasure(temp, temp);
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
-        
-        
+
         if (!hadDrawGridBitmap){
 
             hadDrawGridBitmap=true;
@@ -355,7 +421,7 @@ public class MapView extends ImageView {
             mViewHeight = getHeight();
             drawGridBitmap();
         }
-        
+
         canvas.save();
 
         canvas.scale(mScale,mScale,mViewWidth/2,mViewHeight/2);
@@ -371,7 +437,6 @@ public class MapView extends ImageView {
             canvas.drawCircle(mCenterPoint.x, mCenterPoint.y,15,mPaint);
 
         }
-
 
         //绘制path1的point
         mPaint.setColor(Color.rgb(255,0,0));
@@ -430,6 +495,24 @@ public class MapView extends ImageView {
         }
 
         canvas.restore();
+
+        Matrix matrix = canvas.getMatrix();
+
+        matrix.setRotate(mDirectionAngle -90,mRobortBitMap.getWidth()/2.0f,mRobortBitMap.getHeight()/2.0f);
+
+        matrix.postScale(mScale,mScale,mRobortBitMap.getWidth()/2.0f,mRobortBitMap.getHeight()/2.0f);
+
+        canvas.save();
+
+        Point point = transferCoordinateToView(mRobortPoint);
+
+        canvas.translate(point.x-mRobortBitMap.getWidth()/2.0f,point.y-mRobortBitMap.getHeight()/2.0f);
+
+        canvas.drawBitmap(mRobortBitMap,matrix,null);
+
+        canvas.restore();
+
+
     }
 
     private Point matchClosestPoint(Point centerPoint) {
@@ -445,11 +528,19 @@ public class MapView extends ImageView {
 
         Point closestPoint =  matchClosestPoint(point);
         //坐标转换
-        mCenterPoint = transferCoordinate(closestPoint);
+        mCenterPoint = transferCoordinateToMap(closestPoint);
 
         cleanPathPointAndPath(1);
         cleanPathPointAndPath(2);
         cleanPathPointAndPath(3);
+
+        postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                setRobortPointInMap(mCenterPoint);
+            }
+        },200);
+
 
         invalidate();
 
@@ -459,9 +550,31 @@ public class MapView extends ImageView {
 
     }
 
-    private Point transferCoordinate(Point point) {
+
+    /**
+     * 将view中位置的点转化成map中的点
+     * @param point:view位置中的点
+     * @return 返回view位置对应于map中的点
+     */
+    private Point transferCoordinateToMap(Point point) {
         int x = (int) ((mViewWidth/2*mScale-(mViewWidth/2-point.x+mTranslateX))/mScale);
         int y = (int) ((mViewHeight/2*mScale-(mViewHeight/2-point.y+mTranslateY))/mScale);
+        return new Point(x,y);
+    }
+
+    /**
+     * 将map中的点转化重view位置中的点
+     * @param point:map中的点
+     * @return 返回map中的点对应于view中的位置
+     */
+    private Point transferCoordinateToView(Point point){
+
+//        int x = (int) ((mViewWidth/2*mScale-(mViewWidth/2-point.x+mTranslateX))/mScale);
+//        int y = (int) ((mViewHeight/2*mScale-(mViewHeight/2-point.y+mTranslateY))/mScale);
+
+        int x = (int) (point.x*mScale+mViewWidth/2.0+mTranslateX-mViewWidth/2.0*mScale);
+
+        int y = (int) (point.y*mScale+mViewHeight/2.0+mTranslateY-mViewHeight/2.0*mScale);
 
         return new Point(x,y);
     }
@@ -524,6 +637,9 @@ public class MapView extends ImageView {
 
                     addPathPoint(mPathNum,new Point((int)(x+0.5),(int)(y+0.5)));
                     return false;
+                }else if (isCanSetRobortPoint()){ //说明是要设置机器人图标位置
+
+                    return true;
                 }
                 else {//说明不是在设置原点
 
@@ -533,6 +649,14 @@ public class MapView extends ImageView {
 
                 break;
             case MotionEvent.ACTION_MOVE:
+
+                if (isCanSetRobortPoint()){
+
+                    setRobortPointInView(new Point((int)event.getX(),(int)event.getY()));
+
+                    return true;
+                }
+
 
                 float endX = event.getX();
                 float endY = event.getY();
@@ -546,6 +670,12 @@ public class MapView extends ImageView {
                 setTranslate(deltaX,deltaY);
 
                 break;
+            case MotionEvent.ACTION_UP:
+
+                setCanSetRobortPoint(false);
+
+                break;
+
 
             default:
                 break;
@@ -604,5 +734,4 @@ public class MapView extends ImageView {
         }
         return mathstr;
     }
-
 }

@@ -26,11 +26,15 @@
                 android:layout_width="match_parent"
                 android:layout_height="100px"
                 android:id="@+id/bt_power"
+                android:textSize="30dp"
+                android:textColor="#ff0000"
                 android:text="电源"
                 />
             <Button
                 android:layout_width="match_parent"
                 android:layout_height="100px"
+                android:textSize="30dp"
+                android:textColor="#ff0000"
                 android:id="@+id/bt_clean"
                 android:text="清洁"
                 />
@@ -38,6 +42,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="100px"
                 android:id="@+id/bt_map"
+                android:textSize="30dp"
+                android:textColor="#ff0000"
                 android:text="地图"
                 />
 
