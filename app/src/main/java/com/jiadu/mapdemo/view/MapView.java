@@ -14,6 +14,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
 
+import com.jiadu.fragment.MapFragment;
 import com.jiadu.mapdemo.MainActivity;
 import com.jiadu.mapdemo.R;
 import com.jiadu.mapdemo.util.MyDataBaseUtil;
@@ -73,24 +74,35 @@ public class MapView extends ImageView {
     private int mPathNum =1;
     private Bitmap mRobortBitMap;
 
-    private boolean canSetRobortPoint = false;
+    private boolean canSetRobotPoint = false;
+    private MapFragment mMapFragment;
 
-    public boolean isCanSetRobortPoint() {
-        return canSetRobortPoint;
+    public boolean isCanSetRobotPoint() {
+        return canSetRobotPoint;
     }
 
-    public void setCanSetRobortPoint(boolean canSetRobortPoint) {
-        this.canSetRobortPoint = canSetRobortPoint;
+    public void setCanSetRobotPoint(boolean canSetRobotPoint) {
+        this.canSetRobotPoint = canSetRobotPoint;
+        
+        if (mMapFragment!=null){
+                    
+            mMapFragment.isSetRobotPoint(canSetRobotPoint);
+        }
     }
-
-
 
     /**
      * @param point:在map中的点
      */
     public void setRobortPointInMap(Point point){
 
+        if (point==null){
+            return;
+        }
+
         mRobortPoint = point;
+        if (mMapFragment!=null){
+            mMapFragment.setRobotPointInfo(mRobortPoint);
+        }
         invalidate();
     }
 
@@ -100,12 +112,18 @@ public class MapView extends ImageView {
      */
     public void setRobortPointInView(Point point){
 
-        Point point1 = transferCoordinateToMap(point);
+        if (point==null){
+            return;
+        }
 
-        mRobortPoint = point1;
+        mRobortPoint = transferCoordinateToMap(point);
+        
+        if (mMapFragment!=null){
+            mMapFragment.setRobotPointInfo(mRobortPoint);
+        }
+
         invalidate();
     }
-
 
     /**
      * @return robort在map中的点
@@ -286,6 +304,8 @@ public class MapView extends ImageView {
         super(context, attrs);
 
         mContext = (MainActivity) context;
+
+        mMapFragment = (MapFragment) mContext.getFragmentManager().findFragmentByTag(MainActivity.TAG_FRAGMENT_MAP);
 
         mPaint = new Paint();
 
@@ -637,8 +657,9 @@ public class MapView extends ImageView {
 
                     addPathPoint(mPathNum,new Point((int)(x+0.5),(int)(y+0.5)));
                     return false;
-                }else if (isCanSetRobortPoint()){ //说明是要设置机器人图标位置
+                }else if (isCanSetRobotPoint()){ //说明是要设置机器人图标位置
 
+                    setRobortPointInView(new Point((int)event.getX(),(int)event.getY()));
                     return true;
                 }
                 else {//说明不是在设置原点
@@ -650,7 +671,7 @@ public class MapView extends ImageView {
                 break;
             case MotionEvent.ACTION_MOVE:
 
-                if (isCanSetRobortPoint()){
+                if (isCanSetRobotPoint()){
 
                     setRobortPointInView(new Point((int)event.getX(),(int)event.getY()));
 
@@ -672,7 +693,7 @@ public class MapView extends ImageView {
                 break;
             case MotionEvent.ACTION_UP:
 
-                setCanSetRobortPoint(false);
+                setCanSetRobotPoint(false);
 
                 break;
 

@@ -20,11 +20,7 @@
             android:layout_height="wrap_content"
             android:src="@mipmap/compass"
             />
-
-
     </RelativeLayout>
-
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -63,55 +59,126 @@
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
+                android:orientation="vertical"
                 android:id="@+id/ll_path"
                 >
-                <Button
-                    android:layout_marginLeft="10dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/bt_path"
-                     android:textSize="20sp"
-                    android:text="设置路径"
-                    />
 
-                <Button
-                    android:layout_width="wrap_content"
+                <LinearLayout
                     android:layout_height="wrap_content"
-                    android:textSize="20sp"
-                    android:text="选择路线"
-                    android:id="@+id/bt_choicepath"
+                    android:layout_width="wrap_content"
+                    android:orientation="horizontal"
+                    >
+                    <Button
+                        android:layout_marginLeft="10dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/bt_path"
+                        android:textSize="20sp"
+                        android:text="设置路径"
+                        />
+
+                    <Button
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="20sp"
+                        android:text="选择路线"
+                        android:id="@+id/bt_choicepath"
+                        />
+
+                    <Button
+                        android:layout_marginLeft="10dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/bt_deletepath"
+                        android:textSize="20sp"
+                        android:text="删除路径点"
+                        />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
                     >
 
-                </Button>
-                <Button
-                    android:layout_marginLeft="10dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/bt_deletepath"
-                    android:textSize="20sp"
-                    android:text="删除路径点"
-                    />
-                <Button
-                    android:layout_marginLeft="10dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/bt_setrobotpoint"
-                    android:textSize="20sp"
-                    android:text="设置机器人位置"
-                    />
+                    <Button
+                        android:layout_marginLeft="10dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/bt_setrobotpoint"
+                        android:textSize="20sp"
+                        android:text="设置位置"
+                        />
+
+                    <TextView
+                        android:layout_marginLeft="5dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="20sp"
+                        android:text="--,--"
+                        android:id="@+id/tv_robotpoint"
+                        />
+
+                    <EditText
+                        android:layout_marginLeft="5dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:inputType="number|numberDecimal"
+                        android:id="@+id/et_robotpoint_x"
+                        android:visibility="gone"
+                        android:hint="x"
+                        />
+
+                    <EditText
+                        android:layout_marginLeft="5dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:inputType="number|numberDecimal"
+                        android:visibility="gone"
+                        android:id="@+id/et_robotpoint_y"
+                        android:hint="y"
+                        />
+
+                    <Button
+                        android:layout_marginLeft="5dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="20sp"
+                        android:id="@+id/bt_confirmrobotpoint"
+                        android:visibility="gone"
+                        android:text="确定"
+                        />
+
+                </LinearLayout>
+
 
             </LinearLayout>
 
-            <Button
-                android:layout_marginLeft="10dp"
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="20sp"
-                android:text="选择比例尺"
-                android:id="@+id/bt_scale"
+                android:orientation="horizontal"
                 >
-            </Button>
+
+                <Button
+                    android:layout_marginLeft="10dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="20sp"
+                    android:text="选择比例尺"
+                    android:id="@+id/bt_scale"
+                    >
+                </Button>
+
+                <TextView
+                    android:layout_marginLeft="5dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="20sp"
+                    android:text="比例尺 --:--"
+                    android:id="@+id/tv_scale"
+                    />
+            </LinearLayout>
+
 
         </LinearLayout>
 

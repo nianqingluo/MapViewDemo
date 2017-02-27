@@ -5,7 +5,8 @@
         <item >2号路径</item>
         <item >3号路径</item>
     </string-array>
-    <string-array name="scalespinner">
+    <string-array name="scale">
+        <item >1:10</item>
         <item >1:100</item>
         <item >1:1000</item>
         <item >1:10000</item>
