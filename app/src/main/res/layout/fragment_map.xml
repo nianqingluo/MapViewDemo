@@ -4,26 +4,69 @@
               android:layout_width="match_parent"
               android:layout_height="match_parent">
 
-    <RelativeLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
-
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="match_parent"
+        android:padding="25dp"
+        >
 
         <com.jiadu.mapdemo.view.MapView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="#ded9c3"
+            android:background="#afb6bc"
             android:id="@+id/mv_mapview"
             />
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@mipmap/compass"
-            />
-    </RelativeLayout>
+    </LinearLayout>
+
     <LinearLayout
-        android:layout_width="match_parent"
+        android:layout_width="234px"
         android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="@mipmap/youlan"
+        >
+
+        <Button
+            style="@style/map_rightbutton"
+            android:text="即时操控"
+            android:id="@+id/bt_operate"
+            />
+        <Button
+            style="@style/map_rightbutton"
+            android:text="路线规划"
+            android:id="@+id/bt_path_layout"
+            />
+        <Button
+            style="@style/map_rightbutton"
+            android:text="漫游行走"
+            android:id="@+id/bt_walk"
+            />
+        <Button
+            style="@style/map_rightbutton"
+            android:text="地图还原"
+            android:id="@+id/bt_map_backup"
+            />
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="87px"
+            android:background="@drawable/selector_xiala"
+            android:text="一分钟"
+            android:textColor="#ffffff"
+            android:textSize="25sp"
+            android:gravity="center"
+            android:id="@+id/bt_time"
+            />
+
+
+
+    </LinearLayout>
+
+    <!--各种数据-->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:background="@mipmap/youlan"
+        android:visibility="gone"
         android:orientation="vertical"
         >
         <LinearLayout
@@ -32,30 +75,40 @@
             android:orientation="vertical"
             >
 
-            <Button
-                android:layout_marginLeft="10dp"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="放大"
-                android:textSize="20sp"
-                android:id="@+id/bt_magnify"
-                />
-            <Button
-                android:layout_marginLeft="10dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/bt_reduce"
-                android:textSize="20sp"
-                android:text="缩小"
-                />
-            <Button
-                android:layout_marginLeft="10dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/bt_centerpoint"
-                android:textSize="20sp"
-                android:text="设置原点"
-                />
+                android:orientation="horizontal"
+                >
+
+                <Button
+                    android:layout_marginLeft="10dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="放大"
+                    android:textSize="20sp"
+                    android:id="@+id/bt_magnify"
+                    />
+
+                <Button
+                    android:layout_marginLeft="10dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/bt_reduce"
+                    android:textSize="20sp"
+                    android:text="缩小"
+                    />
+
+                <Button
+                    android:layout_marginLeft="10dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/bt_centerpoint"
+                    android:textSize="20sp"
+                    android:text="设置原点"
+                    />
+            </LinearLayout>
+
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -85,6 +138,15 @@
                         android:id="@+id/bt_choicepath"
                         />
 
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="20sp"
+                        android:text="路线: 1"
+                        android:textColor="#ff0000"
+                        android:id="@+id/tv_path"
+                        />
+
                     <Button
                         android:layout_marginLeft="10dp"
                         android:layout_width="wrap_content"
@@ -93,6 +155,7 @@
                         android:textSize="20sp"
                         android:text="删除路径点"
                         />
+
                 </LinearLayout>
 
                 <LinearLayout

@@ -8,17 +8,20 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
+import android.widget.RadioGroup;
+import android.widget.TextView;
 
 import com.jiadu.fragment.CleanFragment;
 import com.jiadu.fragment.MapFragment;
 import com.jiadu.fragment.PowerFragment;
+import com.jiadu.iinterface.IViewMainActivity;
 import com.jiadu.mapdemo.util.LogUtil;
 import com.jiadu.mapdemo.util.SharePreferenceUtils;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener{
+public class MainActivity extends AppCompatActivity implements IViewMainActivity{
 
 
     public static final String TAG_FRAGMENT_POWER = "power";  //电源FRAGMENT的TAG
@@ -39,6 +42,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Map<String,Fragment> mFragmentMap;
     private FragmentManager mFM;
     private MapFragment mMf;
+    private RadioGroup mRg;
+    private TextView mTv_menu;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,18 +80,48 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mFM = getFragmentManager();
 
         mMapScale=SharePreferenceUtils.getInt(this, "scale");
+
+        OpenPower();
     }
 
     private void initView() {
 
-        mBt_power = (Button) findViewById(R.id.bt_power);
-        mBt_clean = (Button) findViewById(R.id.bt_clean);
-        mBt_map = (Button) findViewById(R.id.bt_map);
+//        mBt_power = (Button) findViewById(R.id.bt_power);
+//        mBt_clean = (Button) findViewById(R.id.bt_clean);
+//        mBt_map = (Button) findViewById(R.id.bt_map);
+//
+//        mBt_power.setOnClickListener(this);
+//        mBt_clean.setOnClickListener(this);
+//        mBt_map.setOnClickListener(this);
 
-        mBt_power.setOnClickListener(this);
-        mBt_clean.setOnClickListener(this);
-        mBt_map.setOnClickListener(this);
+        mRg = (RadioGroup) findViewById(R.id.rg_mainactivity);
+        mTv_menu = (TextView) findViewById(R.id.tv_mainactivity_menu);
 
+        mRg.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                switch (checkedId){
+                    case R.id.gb_power:
+                        OpenPower();
+                        mTv_menu.setText("电源");
+                    break;
+                    case R.id.gb_clean:
+                        OpenClean();
+                        mTv_menu.setText("清洁");
+                    break;
+                    case R.id.gb_map:
+                        OpenMap();
+                        mTv_menu.setText("地图");
+                    break;
+                    case R.id.gb_setting:
+                        OpenSetting();
+                        mTv_menu.setText("设置");
+                    break;
+                    default:
+                    break;
+                }
+            }
+        });
     }
 
     @Override
@@ -133,46 +168,73 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             default:
             break;
         }
+        mMf.setRobotPointInfo();
     }
 
     public int getMapScale() {
         return mMapScale;
     }
 
-    @Override
-    public void onClick(View v) {
+    public int getMapScaleFactor(){
 
-        switch (v.getId()){
-            case R.id.bt_power:{
-                FragmentTransaction transaction = mFM.beginTransaction();
-                transaction.replace(R.id.fl_fragment,mFragmentMap.get("power"), TAG_FRAGMENT_POWER);
-                transaction.commit();
-            }
+        int temp = 0;
+        switch (mMapScale){
+            case 0:
+                temp= 10;
             break;
-            case R.id.bt_clean:{
-                FragmentTransaction transaction = mFM.beginTransaction();
-                transaction.replace(R.id.fl_fragment,mFragmentMap.get("clean"), TAG_FRAGMENT_CLEAN);
-                transaction.commit();
-            }
+            case 1:
+                temp= 100;
+
             break;
-            case R.id.bt_map:{
-                FragmentTransaction transaction = mFM.beginTransaction();
-                transaction.replace(R.id.fl_fragment,mFragmentMap.get("map"), TAG_FRAGMENT_MAP);
-                transaction.commit();
-                if (mMf == null){
-                    mMf = (MapFragment) mFragmentMap.get("map");
-                }
-            }
-                break;
+            case 2:
+                temp= 1000;
+
+            break;
+            case 3:
+                temp= 10000;
+
+            break;
             default:
             break;
         }
+        return temp;
     }
+
+
 
     @Override
     public void finish() {
         super.finish();
 
         System.exit(2);
+    }
+
+    @Override
+    public void OpenPower() {
+        FragmentTransaction transaction = mFM.beginTransaction();
+        transaction.replace(R.id.fl_fragment,mFragmentMap.get("power"), TAG_FRAGMENT_POWER);
+        transaction.commit();
+    }
+
+    @Override
+    public void OpenClean() {
+        FragmentTransaction transaction = mFM.beginTransaction();
+        transaction.replace(R.id.fl_fragment,mFragmentMap.get("clean"), TAG_FRAGMENT_CLEAN);
+        transaction.commit();
+    }
+
+    @Override
+    public void OpenMap() {
+        FragmentTransaction transaction = mFM.beginTransaction();
+        transaction.replace(R.id.fl_fragment,mFragmentMap.get("map"), TAG_FRAGMENT_MAP);
+        transaction.commit();
+        if (mMf == null){
+            mMf = (MapFragment) mFragmentMap.get("map");
+        }
+
+    }
+
+    @Override
+    public void OpenSetting() {
     }
 }

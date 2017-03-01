@@ -16,14 +16,18 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.jiadu.bean.IMUDataBean;
+import com.jiadu.dialog.ChoicePathDialog;
+import com.jiadu.dialog.ChoiceScaleDialog;
 import com.jiadu.iinterface.IPresent;
 import com.jiadu.iinterface.IView;
 import com.jiadu.impl.MapFragmentPresentImpl;
 import com.jiadu.mapdemo.MainActivity;
 import com.jiadu.mapdemo.R;
+import com.jiadu.mapdemo.util.Constant;
 import com.jiadu.mapdemo.util.ToastUtils;
 import com.jiadu.mapdemo.view.MapView;
 
+import java.text.DecimalFormat;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -67,6 +71,8 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
     private Button mBt_setrobotpoint;
     public TextView mTv_scale;
 
+    private DecimalFormat mFormat = new DecimalFormat("0.0");
+
     private Handler mHandler = new Handler(){
         @Override
         public void handleMessage(Message msg) {
@@ -96,10 +102,30 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
     private EditText mEt_robot_y;
     private Button mBt_confirmrobotpoint;
     private MainActivity mActivity;
+    private TextView mTv_path;
 
     public void setPath(int path) {
         this.mPath = path;
         mMapview.setPathNum(path);
+
+        switch (path){
+            case 1:
+                mTv_path.setTextColor(Constant.PATHCOLOR1);
+                mTv_path.setText("线路: 1");
+
+            break;
+            case 2:
+                mTv_path.setTextColor(Constant.PATHCOLOR2);
+                mTv_path.setText("线路: 2");
+
+            break;
+            case 3:
+                mTv_path.setTextColor(Constant.PATHCOLOR3);
+                mTv_path.setText("线路: 3");
+            break;
+            default:
+            break;
+        }
     }
 
     @Nullable
@@ -173,6 +199,7 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
         mTv_robotpoint = (TextView) findViewById(R.id.tv_robotpoint);
         mEt_robot_x = (EditText) findViewById(R.id.et_robotpoint_x);
         mEt_robot_y = (EditText) findViewById(R.id.et_robotpoint_y);
+        mTv_path = (TextView) findViewById(R.id.tv_path);
 
         mBt_confirmrobotpoint.setOnClickListener(this);
         mBt_setrobotpoint.setOnClickListener(this);
@@ -194,6 +221,7 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
 
         return viewById;
     }
+
 
     @Override
     public void onResume() {
@@ -224,11 +252,9 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
             }
         }
 
-
         //设置当前位置的信息
         Point centerPoint = mMapview.getCenterPoint();
-        setRobotPointInfo(centerPoint);
-
+        setRobotPointInfo();
 
         //如果没有原点，取消设置路径按钮
         if (mMapview.getCenterPoint()==null){
@@ -337,6 +363,20 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
                 break;
             case R.id.bt_confirmrobotpoint:
                 mMapview.setCanSetRobotPoint(false);
+
+                try {
+                    float x = Float.parseFloat(mEt_robot_x.getText().toString());
+                    float y = Float.parseFloat(mEt_robot_y.getText().toString());
+
+                    int v1 = (int) (x * 100 * MapView.mGridWidth / Constant.DISTANCEPERGRID / mActivity.getMapScaleFactor() + mMapview.getCenterPoint().x+0.5f);
+                    int v2 = (int) (mMapview.getCenterPoint().y - y * MapView.mGridWidth * 100 / Constant.DISTANCEPERGRID / mActivity.getMapScaleFactor()+0.5f);
+
+                    mMapview.setRobortPointInMap(new Point(v1,v2));
+
+                } catch (NumberFormatException e) {
+                    e.printStackTrace();
+                }
+
                 break;
 
             default:
@@ -361,10 +401,7 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
             mBt_confirmrobotpoint.setVisibility(View.GONE);
 
         }
-
-
     }
-
 
     @Override
     public void onPause() {
@@ -377,22 +414,38 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
     }
 
 
-    public void setRobotPointInfo(Point point) {
+    public void setRobotPointInfo() {
 
         if (mEt_robot_x==null||mEt_robot_y==null||mTv_robotpoint==null){
         return;
         }
 
-        mEt_robot_x.setText(point.x+"");
+        Point point = mMapview.getRobortPointInMap();
+        Point centerPoint = mMapview.getCenterPoint();
 
-        mEt_robot_x.setSelection(mEt_robot_x.getText().length());
+//        point.x=(point.x-centerPoint.x)/40.0*10*mActivity.getMapScaleFactor()/100;
+//        point.y=(point.y-centerPoint.y)/40.0*10*mActivity.getMapScaleFactor()/100;
 
-        mEt_robot_y.setText(point.y+"");
-        mEt_robot_y.setSelection(mEt_robot_y.getText().length());
+        String x = mFormat.format((point.x - centerPoint.x) / 1.0/MapView.mGridWidth * Constant.DISTANCEPERGRID * mActivity.getMapScaleFactor() / 100);
+        String y = mFormat.format((-point.y + centerPoint.y) / 1.0 /MapView.mGridWidth * Constant.DISTANCEPERGRID * mActivity.getMapScaleFactor() / 100);
 
-        mTv_robotpoint.setText("当前位置："+point.x+","+point.y);
+        mEt_robot_x.setText(x);
+        mEt_robot_x.setSelection(x.length());
+
+        mEt_robot_y.setText(y);
+        mEt_robot_y.setSelection(y.length());
+
+        mTv_robotpoint.setText("当前位置："+x+" , "+y);
+//        mEt_robot_x.setText(point.x/40.0*10*mActivity.getMapScaleFactor()/100+"");
+//        mEt_robot_x.setSelection(mEt_robot_x.getText().length());
+//
+//        mEt_robot_y.setText(point.y/40.0*10*mActivity.getMapScaleFactor()/100+"");
+//        mEt_robot_y.setSelection(mEt_robot_y.getText().length());
+//
+//        mTv_robotpoint.setText("当前位置："+point.x/40.0*10*mActivity.getMapScaleFactor()/100+","+point.y/40.0*10*mActivity.getMapScaleFactor()/100);
 
     }
+
     @Override
     public void updata13TV(IMUDataBean bean) {
 
@@ -416,7 +469,6 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
 
             mTv_pressure.setText("---");
 
-
         }else {
 
             mTv_linearacc_x.setText(bean.linearAcc[0] + "");
@@ -437,14 +489,12 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
 
             mTv_pressure.setText(bean.pressure + "Pa");
         }
-
     }
 
     @Override
     public void showChoicePathDialog() {
 
         DialogFragment choicePath = new ChoicePathDialog();
-
         choicePath.show(getActivity().getFragmentManager(),"choicepath");
 
     }
@@ -454,7 +504,5 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
 
         DialogFragment choiceScale = new ChoiceScaleDialog();
         choiceScale.show(getActivity().getFragmentManager(),"choicescale");
-
     }
-
 }

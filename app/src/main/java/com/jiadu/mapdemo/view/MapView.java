@@ -17,6 +17,7 @@ import android.widget.ImageView;
 import com.jiadu.fragment.MapFragment;
 import com.jiadu.mapdemo.MainActivity;
 import com.jiadu.mapdemo.R;
+import com.jiadu.mapdemo.util.Constant;
 import com.jiadu.mapdemo.util.MyDataBaseUtil;
 
 import java.util.ArrayList;
@@ -35,7 +36,7 @@ public class MapView extends ImageView {
 
     private int mViewWidth ;
     private int mViewHeight ;
-    private int mGridWidth = 40;
+    public static int mGridWidth = 40;
     private Bitmap mGridBitmap;
     private Paint mPaint;
     private Paint mPathPaint;
@@ -72,10 +73,13 @@ public class MapView extends ImageView {
     private boolean hadDrawGridBitmap = false;
 
     private int mPathNum =1;
-    private Bitmap mRobortBitMap;
+    private Bitmap mRobortBitMapJainTou;
 
     private boolean canSetRobotPoint = false;
     private MapFragment mMapFragment;
+
+    private Bitmap mCenterPointBitMap =null;
+    private Bitmap mRobotBitMapTouXiang =null;
 
     public boolean isCanSetRobotPoint() {
         return canSetRobotPoint;
@@ -101,7 +105,7 @@ public class MapView extends ImageView {
 
         mRobortPoint = point;
         if (mMapFragment!=null){
-            mMapFragment.setRobotPointInfo(mRobortPoint);
+            mMapFragment.setRobotPointInfo();
         }
         invalidate();
     }
@@ -119,14 +123,14 @@ public class MapView extends ImageView {
         mRobortPoint = transferCoordinateToMap(point);
         
         if (mMapFragment!=null){
-            mMapFragment.setRobotPointInfo(mRobortPoint);
+            mMapFragment.setRobotPointInfo();
         }
 
         invalidate();
     }
 
     /**
-     * @return robort在map中的点
+     * @return robot在map中的点
      */
     public Point getRobortPointInMap(){
 
@@ -134,7 +138,7 @@ public class MapView extends ImageView {
     }
 
     /**
-     * @return robor在View中的位置
+     * @return robot在View中的位置
      */
     public Point getRobortPointInView(){
 
@@ -161,7 +165,6 @@ public class MapView extends ImageView {
                 path1.lineTo(point1.x,point1.y);
                 path1Arrow = pointToArrow(pathListAfterTransfer1);
 
-
             break;
             case 2:
 //                pathList2.add(point);
@@ -169,13 +172,11 @@ public class MapView extends ImageView {
                 path2.lineTo(point1.x,point1.y);
                 path2Arrow = pointToArrow(pathListAfterTransfer2);
 
-
             break;
             case 3:
 //                pathList3.add(point);
                 pathListAfterTransfer3.add(point1);
                 path3.lineTo(point1.x,point1.y);
-
                 path3Arrow = pointToArrow(pathListAfterTransfer3);
             break;
             default:
@@ -326,7 +327,11 @@ public class MapView extends ImageView {
         //画网格的bitmap
 //        drawGridBitmap();
 
-        mRobortBitMap = BitmapFactory.decodeResource(mContext.getResources(), R.mipmap.car);
+        mRobortBitMapJainTou = BitmapFactory.decodeResource(mContext.getResources(), R.mipmap.jiantou);
+
+        mCenterPointBitMap = BitmapFactory.decodeResource(mContext.getResources(),R.mipmap.qi);
+
+        mRobotBitMapTouXiang = BitmapFactory.decodeResource(mContext.getResources(),R.mipmap.touxiang);
 
         //初始化硬盘数据
         initDataFromDataBase();
@@ -346,17 +351,17 @@ public class MapView extends ImageView {
 
         canvas.drawARGB(Color.TRANSPARENT,0,0,0);
 
-        paint.setColor(Color.BLUE);
+        paint.setColor(Color.rgb(29,28,28));
 
         paint.setStyle(Paint.Style.STROKE);
 
-        for (int i =0 ;i<(mViewHeight*1.0/mGridWidth-1) ;i++){
+        for (int i =0 ;i<(mViewHeight*1.0/mGridWidth) ;i++){
 
-            canvas.drawLine(0, mGridWidth +i* mGridWidth,mViewWidth, mGridWidth +i* mGridWidth,paint);
+            canvas.drawLine(0, i* mGridWidth,mViewWidth, i* mGridWidth,paint);
         }
-        for (int i = 0 ; i<(mViewWidth*1.0/mGridWidth-1);i++){
+        for (int i = 0 ; i<(mViewWidth*1.0/mGridWidth);i++){
 
-            canvas.drawLine(mGridWidth +i* mGridWidth,0, mGridWidth +i* mGridWidth,mViewHeight,paint);
+            canvas.drawLine(i* mGridWidth,0, i* mGridWidth,mViewHeight,paint);
         }
     }
 
@@ -427,7 +432,7 @@ public class MapView extends ImageView {
 
         int temp=width>height?heightMeasureSpec:widthMeasureSpec;
 
-        super.onMeasure(temp, temp);
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
     }
 
     @Override
@@ -450,32 +455,37 @@ public class MapView extends ImageView {
 
         canvas.drawBitmap(mGridBitmap,0,0,mPaint);
 
+        //绘制中心点头像和箭头
         if(mCenterPoint != null){
 
             mPaint.setColor(Color.BLACK);
+
+//            canvas.translate(mCenterPoint.x-mCenterPointBitMap.getWidth()/2.0f,mCenterPoint.y-mCenterPointBitMap.getHeight()/2.0f);
             //绘制中心点的圆
-            canvas.drawCircle(mCenterPoint.x, mCenterPoint.y,15,mPaint);
+//            canvas.drawCircle(mCenterPoint.x, mCenterPoint.y,15,mPaint);
+            
+            canvas.drawBitmap(mCenterPointBitMap,mCenterPoint.x- mCenterPointBitMap.getWidth()/2.0f,mCenterPoint.y- mCenterPointBitMap.getHeight()/2.0f,mPaint);
 
         }
 
         //绘制path1的point
-        mPaint.setColor(Color.rgb(255,0,0));
+        mPaint.setColor(Constant.PATHCOLOR1);
         for (Point p: pathListAfterTransfer1) {
             canvas.drawCircle(p.x, p.y, 10, mPaint);
         }
         //绘制path2的point
-        mPaint.setColor(Color.rgb(255,241,0));
+        mPaint.setColor(Constant.PATHCOLOR2);
         for (Point p: pathListAfterTransfer2) {
             canvas.drawCircle(p.x, p.y, 10, mPaint);
         }
         //绘制path3的point
-        mPaint.setColor(Color.rgb(181,134,84));
+        mPaint.setColor(Constant.PATHCOLOR3);
         for (Point p: pathListAfterTransfer3) {
             canvas.drawCircle(p.x, p.y, 10, mPaint);
         }
 
         //绘制path1
-        mPathPaint.setColor(Color.rgb(255,0,0));
+        mPathPaint.setColor(Constant.PATHCOLOR1);
         canvas.drawPath(path1,mPathPaint);
         if (pathListAfterTransfer1.size()>1) {
 
@@ -483,7 +493,7 @@ public class MapView extends ImageView {
 
         }
         //绘制arrow1
-        mArrowPaint.setColor(Color.rgb(255,0,0));
+        mArrowPaint.setColor(Constant.PATHCOLOR1);
         for (Path path: path1Arrow) {
             canvas.drawPath(path,mArrowPaint);
         }
@@ -491,47 +501,47 @@ public class MapView extends ImageView {
 
 
         //绘制path2
-        mPathPaint.setColor(Color.rgb(255,241,0));
+        mPathPaint.setColor(Constant.PATHCOLOR2);
         canvas.drawPath(path2,mPathPaint);
         if (pathListAfterTransfer2.size()>1) {
             canvas.drawLine(pathListAfterTransfer2.get(pathListAfterTransfer2.size()-1).x,pathListAfterTransfer2.get(pathListAfterTransfer2.size()-1).y,mCenterPoint.x,mCenterPoint.y,mPathPaint);
         }
         //绘制arrow2
-        mArrowPaint.setColor(Color.rgb(255,241,0));
+        mArrowPaint.setColor(Constant.PATHCOLOR2);
         for (Path path: path2Arrow) {
             canvas.drawPath(path,mArrowPaint);
         }
 
         //绘制path3
-        mPathPaint.setColor(Color.rgb(181,134,84));
+        mPathPaint.setColor(Constant.PATHCOLOR3);
         canvas.drawPath(path3,mPathPaint);
         if (pathListAfterTransfer3.size()>1) {
             canvas.drawLine(pathListAfterTransfer3.get(pathListAfterTransfer3.size()-1).x,pathListAfterTransfer3.get(pathListAfterTransfer3.size()-1).y,mCenterPoint.x,mCenterPoint.y,mPathPaint);
         }
         //绘制arrow3
-        mArrowPaint.setColor(Color.rgb(181,134,84));
+        mArrowPaint.setColor(Constant.PATHCOLOR3);
         for (Path path: path3Arrow) {
             canvas.drawPath(path,mArrowPaint);
         }
 
         canvas.restore();
 
+        //Draw机器人所在的位置
         Matrix matrix = canvas.getMatrix();
 
-        matrix.setRotate(mDirectionAngle -90,mRobortBitMap.getWidth()/2.0f,mRobortBitMap.getHeight()/2.0f);
+        matrix.setRotate(mDirectionAngle , mRobortBitMapJainTou.getWidth()/2.0f, mRobortBitMapJainTou.getHeight()/2.0f);
 
-        matrix.postScale(mScale,mScale,mRobortBitMap.getWidth()/2.0f,mRobortBitMap.getHeight()/2.0f);
+        matrix.postScale(mScale,mScale, mRobortBitMapJainTou.getWidth()/2.0f, mRobortBitMapJainTou.getHeight()/2.0f);
 
         canvas.save();
 
         Point point = transferCoordinateToView(mRobortPoint);
 
-        canvas.translate(point.x-mRobortBitMap.getWidth()/2.0f,point.y-mRobortBitMap.getHeight()/2.0f);
+        canvas.translate(point.x- mRobortBitMapJainTou.getWidth()/2.0f,point.y- mRobortBitMapJainTou.getHeight()/2.0f);
 
-        canvas.drawBitmap(mRobortBitMap,matrix,null);
-
+        canvas.drawBitmap(mRobortBitMapJainTou,matrix,null);
+        canvas.drawBitmap(mRobotBitMapTouXiang,matrix,null);
         canvas.restore();
-
 
     }
 
@@ -706,8 +716,8 @@ public class MapView extends ImageView {
 
     public Path drawArrow(int sx, int sy, int ex, int ey)
     {
-        double H = 30; // 箭头高度
-        double L = 12; // 底边的一半
+        double H = 28; // 箭头高度
+        double L = 11; // 底边的一半
         int x3 = 0;
         int y3 = 0;
         int x4 = 0;

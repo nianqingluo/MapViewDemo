@@ -4,58 +4,95 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:background="@mipmap/bg"
     >
-    <ImageView
+
+
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="100px"
-        android:background="#cccc8c"
-        />
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="horizontal"
+        android:layout_height="29px"
+        android:background="@mipmap/dingbu"
         >
 
-        <LinearLayout
-            android:layout_width="470px"
+        <TextView
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="15px"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="嘟嘟机器人操作系统 V1.0"
+            android:textColor="#ffffff"
+            android:textSize="20sp"
+            />
+        <TextView
+            android:layout_centerInParent="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="电源"
+            android:textColor="#ffffff"
+            android:textSize="20sp"
+            android:id="@+id/tv_mainactivity_menu"
+            />
+
+    </RelativeLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal"
+        android:layout_marginRight="3px"
+        >
+
+        <RadioGroup
+            android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:orientation="vertical"
+            android:background="@mipmap/zuolan"
+            android:id="@+id/rg_mainactivity"
             >
 
-            <Button
-                android:layout_width="match_parent"
-                android:layout_height="100px"
-                android:id="@+id/bt_power"
-                android:textSize="30dp"
-                android:textColor="#ff0000"
-                android:text="电源"
+            <RadioButton
+                android:layout_width="233px"
+                android:layout_height="153px"
+                android:button="@null"
+                android:checked="true"
+                android:background="@drawable/selector_power"
+                android:id="@+id/gb_power"
                 />
-            <Button
-                android:layout_width="match_parent"
-                android:layout_height="100px"
-                android:textSize="30dp"
-                android:textColor="#ff0000"
-                android:id="@+id/bt_clean"
-                android:text="清洁"
+            <RadioButton
+                android:layout_width="233px"
+                android:layout_height="153px"
+                android:button="@null"
+                android:background="@drawable/selector_clean"
+                android:id="@+id/gb_clean"
                 />
-            <Button
-                android:layout_width="match_parent"
-                android:layout_height="100px"
-                android:id="@+id/bt_map"
-                android:textSize="30dp"
-                android:textColor="#ff0000"
-                android:text="地图"
+            <RadioButton
+                android:layout_width="233px"
+                android:layout_height="153px"
+                android:button="@null"
+                android:background="@drawable/selector_map"
+                android:id="@+id/gb_map"
+                />
+            <RadioButton
+                android:layout_width="233px"
+                android:layout_height="153px"
+                android:button="@null"
+                android:background="@drawable/selector_setting"
+                android:id="@+id/gb_setting"
                 />
 
-        </LinearLayout>
-        
+        </RadioGroup>
+
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:id="@+id/fl_fragment"
             >
-
         </FrameLayout>
     </LinearLayout>
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:src="@mipmap/dingbu"
+        />
 
 </LinearLayout>

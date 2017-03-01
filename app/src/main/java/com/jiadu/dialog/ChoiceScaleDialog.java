@@ -1,4 +1,4 @@
-package com.jiadu.fragment;
+package com.jiadu.dialog;
 
 import android.app.Dialog;
 import android.app.DialogFragment;
@@ -119,8 +119,5 @@ public class ChoiceScaleDialog extends DialogFragment {
             default:
             break;
         }
-
-
     }
-
 }

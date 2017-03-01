@@ -1,4 +1,4 @@
-package com.jiadu.fragment;
+package com.jiadu.dialog;
 
 import android.app.Dialog;
 import android.app.DialogFragment;
@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 
+import com.jiadu.fragment.MapFragment;
 import com.jiadu.mapdemo.R;
 
 import java.util.Timer;
@@ -28,7 +29,6 @@ public class ChoicePathDialog extends DialogFragment {
                     public void onClick(DialogInterface dialog, int whichButton) {
 
                         /* User clicked on a radio button do some stuff */
-
                         map.setPath(whichButton+1);
 
                         Timer timer = new Timer();
