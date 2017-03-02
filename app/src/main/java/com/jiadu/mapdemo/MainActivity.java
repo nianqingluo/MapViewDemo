@@ -44,6 +44,7 @@ public class MainActivity extends AppCompatActivity implements IViewMainActivity
     private MapFragment mMf;
     private RadioGroup mRg;
     private TextView mTv_menu;
+    private TextView mTv_position;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,6 +97,8 @@ public class MainActivity extends AppCompatActivity implements IViewMainActivity
 
         mRg = (RadioGroup) findViewById(R.id.rg_mainactivity);
         mTv_menu = (TextView) findViewById(R.id.tv_mainactivity_menu);
+
+        mTv_position = (TextView) findViewById(R.id.tv_mainactivity_position);
 
         mRg.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
@@ -231,10 +234,14 @@ public class MainActivity extends AppCompatActivity implements IViewMainActivity
         if (mMf == null){
             mMf = (MapFragment) mFragmentMap.get("map");
         }
-
     }
 
     @Override
     public void OpenSetting() {
+    }
+
+    @Override
+    public void setPosition(String position) {
+        mTv_position.setText(position);
     }
 }

@@ -9,5 +9,5 @@ public interface IViewMainActivity {
     public void OpenClean();
     public void OpenMap();
     public void OpenSetting();
-
+    public void setPosition(String position);
 }

@@ -9,6 +9,7 @@ import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Point;
+import android.graphics.PointF;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
@@ -69,7 +70,6 @@ public class MapView extends ImageView {
 
     private MyDataBaseUtil mDbUtil;
     private Paint mArrowPaint;
-
     private boolean hadDrawGridBitmap = false;
 
     private int mPathNum =1;
@@ -80,6 +80,8 @@ public class MapView extends ImageView {
 
     private Bitmap mCenterPointBitMap =null;
     private Bitmap mRobotBitMapTouXiang =null;
+
+    private PointF tempPointF = null;
 
     public boolean isCanSetRobotPoint() {
         return canSetRobotPoint;
@@ -161,6 +163,10 @@ public class MapView extends ImageView {
         switch (pathNum){
             case 1:
 //                pathList1.add(point);
+                if (pathListAfterTransfer1.contains(point)){
+                    return;
+                }
+
                 pathListAfterTransfer1.add(point1);
                 path1.lineTo(point1.x,point1.y);
                 path1Arrow = pointToArrow(pathListAfterTransfer1);
@@ -168,6 +174,12 @@ public class MapView extends ImageView {
             break;
             case 2:
 //                pathList2.add(point);
+
+
+                if (pathListAfterTransfer2.contains(point)){
+                    return;
+                }
+
                 pathListAfterTransfer2.add(point1);
                 path2.lineTo(point1.x,point1.y);
                 path2Arrow = pointToArrow(pathListAfterTransfer2);
@@ -175,6 +187,11 @@ public class MapView extends ImageView {
             break;
             case 3:
 //                pathList3.add(point);
+
+                if (pathListAfterTransfer3.contains(point)){
+                    return;
+                }
+
                 pathListAfterTransfer3.add(point1);
                 path3.lineTo(point1.x,point1.y);
                 path3Arrow = pointToArrow(pathListAfterTransfer3);
@@ -543,6 +560,33 @@ public class MapView extends ImageView {
         canvas.drawBitmap(mRobotBitMapTouXiang,matrix,null);
         canvas.restore();
 
+        //在设置路径的时候，预显示点
+        if (tempPointF!=null){
+            
+            switch (mPathNum){
+                case 1:
+                    mPaint.setColor(Constant.PATHCOLOR1);
+                    canvas.drawCircle(tempPointF.x,tempPointF.y,10,mPaint);
+
+                break;
+                case 2:
+                    mPaint.setColor(Constant.PATHCOLOR2);
+                    canvas.drawCircle(tempPointF.x,tempPointF.y,10,mPaint);
+
+                break;
+                case 3:
+                    mPaint.setColor(Constant.PATHCOLOR3);
+                    canvas.drawCircle(tempPointF.x,tempPointF.y,10,mPaint);
+
+                break;
+
+                default:
+                break;
+            }
+            
+        }
+        
+
     }
 
     private Point matchClosestPoint(Point centerPoint) {
@@ -550,7 +594,10 @@ public class MapView extends ImageView {
         return centerPoint;
     }
 
-    public void setCenterPoint(Point point){
+    /**
+     * @param point:在view中的位置
+     */
+    public void setCenterPoint(Point point,boolean isSave){
 
         if (!canSetCenterPoint){
               return;
@@ -571,12 +618,12 @@ public class MapView extends ImageView {
             }
         },200);
 
-
         invalidate();
 
-        mDbUtil.deleteAll();
-
-        mDbUtil.addPoint(mCenterPoint.x,mCenterPoint.y, TYPE_CENTERPOINT);
+        if (isSave){
+            mDbUtil.deleteAll();
+            mDbUtil.addPoint(mCenterPoint.x,mCenterPoint.y, TYPE_CENTERPOINT);
+        }
 
     }
 
@@ -647,67 +694,89 @@ public class MapView extends ImageView {
     public boolean onTouchEvent(MotionEvent event) {
 
         switch (event.getAction()){
-            case MotionEvent.ACTION_DOWN:
+            case MotionEvent.ACTION_DOWN:{
+
+                    float x = event.getX();
+                    float y = event.getY();
 
                 if(isCanSetCenterPoint()){//说明是要设置原点
 
-                    float x = event.getX();
-                    float y = event.getY();
-
-                    setCenterPoint(new Point((int)(x+0.5),(int)(y+0.5)));
-
-                    mContext.findViewById(R.id.ll_path).setVisibility(View.VISIBLE);
-
-                    //                    mContext.mLl_path.setVisibility(View.VISIBLE);
-                    setCanSetCenterPoint(false);
-                    return false;
-                }else if(isCanSetPath()){//说明是要设置路径
-                    float x = event.getX();
-                    float y = event.getY();
-
-                    addPathPoint(mPathNum,new Point((int)(x+0.5),(int)(y+0.5)));
-                    return false;
-                }else if (isCanSetRobotPoint()){ //说明是要设置机器人图标位置
-
-                    setRobortPointInView(new Point((int)event.getX(),(int)event.getY()));
+                    setCenterPoint(new Point((int)x,(int)y),false);
+//                    mMapFragment.mLl_path.setVisibility(View.VISIBLE);
+//                    setCanSetCenterPoint(false);
+//                    return false;
                     return true;
                 }
-                else {//说明不是在设置原点
+                else if (isCanSetRobotPoint()){ //说明是要设置机器人图标位置
 
+                    setRobortPointInView(new Point((int)x,(int)y));
+                    return true;
+                }
+
+                else if(isCanSetPath()){//说明是要设置路径
+
+                    tempPointF = new PointF(x,y);
+                    invalidate();
+                    return true;
+//                    addPathPoint(mPathNum,new Point((int)(x+0.5),(int)(y+0.5)));
+//                    return false;
+                }
+                else {//说明不是在设置原点
                     mStartX = event.getX();
                     mStartY = event.getY();
                 }
-
                 break;
-            case MotionEvent.ACTION_MOVE:
+            }
 
-                if (isCanSetRobotPoint()){
+            case MotionEvent.ACTION_MOVE:{
 
-                    setRobortPointInView(new Point((int)event.getX(),(int)event.getY()));
+                float x =event.getX();
+                float y = event.getY();
 
+                if (isCanSetCenterPoint()){//说明是要设置原点
+                    setCenterPoint(new Point((int)x,(int)y),false);
+                    return true;
+                }
+                else if (isCanSetRobotPoint()){//说明是要设置机器人图标位置
+                    setRobortPointInView(new Point((int)x,(int)y));
+                    return true;
+                }
+                else if (isCanSetPath()){//说明是要设置路径
+                    tempPointF = new PointF(x,y);
+                    invalidate();
                     return true;
                 }
 
-
+                //说明要平移地图
                 float endX = event.getX();
                 float endY = event.getY();
-
                 float deltaX = endX - mStartX;
                 float deltaY = endY - mStartY;
-
                 mStartX = endX;
                 mStartY = endY;
-
                 setTranslate(deltaX,deltaY);
 
                 break;
-            case MotionEvent.ACTION_UP:
+            }
+            case MotionEvent.ACTION_UP:{
+                float x = event.getX();
+                float y = event.getY();
 
-                setCanSetRobotPoint(false);
-
+                if (isCanSetCenterPoint()){//如果是在设置原点，取消可以设置原点
+                    setCanSetCenterPoint(false);
+                    mMapFragment.mLl_path.setVisibility(View.VISIBLE);
+                    setCenterPoint(new Point((int)(x+0.5f),(int)(y+0.5f)),true);
+                }
+                else if (isCanSetRobotPoint()){//如果是在设置机器人位置，取消可以设置机器人位置
+                    setCanSetRobotPoint(false);
+                    setRobortPointInView(new Point((int)(x+0.5f),(int)(y+0.5f)));
+                }
+                else if (isCanSetPath()){//说明是要设置路径
+                    tempPointF = null;
+                    addPathPoint(mPathNum,new Point((int)(x+0.5),(int)(y+0.5)));
+                }
                 break;
-
-
+            }
             default:
                 break;
         }

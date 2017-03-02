@@ -8,7 +8,7 @@
         android:layout_width="0dp"
         android:layout_weight="1"
         android:layout_height="match_parent"
-        android:padding="25dp"
+        android:padding="25px"
         >
 
         <com.jiadu.mapdemo.view.MapView
@@ -19,231 +19,321 @@
             />
     </LinearLayout>
 
-    <LinearLayout
+    <ScrollView
         android:layout_width="234px"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:background="@mipmap/youlan"
-        >
-
-        <Button
-            style="@style/map_rightbutton"
-            android:text="即时操控"
-            android:id="@+id/bt_operate"
-            />
-        <Button
-            style="@style/map_rightbutton"
-            android:text="路线规划"
-            android:id="@+id/bt_path_layout"
-            />
-        <Button
-            style="@style/map_rightbutton"
-            android:text="漫游行走"
-            android:id="@+id/bt_walk"
-            />
-        <Button
-            style="@style/map_rightbutton"
-            android:text="地图还原"
-            android:id="@+id/bt_map_backup"
-            />
-        <Button
-            android:layout_width="match_parent"
-            android:layout_height="87px"
-            android:background="@drawable/selector_xiala"
-            android:text="一分钟"
-            android:textColor="#ffffff"
-            android:textSize="25sp"
-            android:gravity="center"
-            android:id="@+id/bt_time"
-            />
-
-
-
-    </LinearLayout>
-
-    <!--各种数据-->
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:background="@mipmap/youlan"
-        android:visibility="gone"
-        android:orientation="vertical"
         >
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:orientation="vertical"
+            android:background="@mipmap/youlan"
             >
+            <Button
+                style="@style/map_rightbutton"
+                android:text="即时操控"
+                android:id="@+id/bt_operate"
+                />
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
+                android:layout_height="0px"
+                android:orientation="vertical"
+                android:id="@+id/ll_operate"
                 >
 
                 <Button
-                    android:layout_marginLeft="10dp"
+                    android:layout_marginLeft="5px"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="放大"
-                    android:textSize="20sp"
+                    android:text="放大地图"
+                    android:textSize="18px"
                     android:id="@+id/bt_magnify"
                     />
 
                 <Button
-                    android:layout_marginLeft="10dp"
+                    android:layout_marginLeft="5px"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:id="@+id/bt_reduce"
-                    android:textSize="20sp"
-                    android:text="缩小"
+                    android:textSize="18px"
+                    android:text="缩小地图"
                     />
 
+            </LinearLayout>
+
+            <Button
+                style="@style/map_rightbutton"
+                android:text="路线规划"
+                android:id="@+id/bt_path_layout"
+                />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="0px"
+                android:orientation="vertical"
+                android:id="@+id/ll_path_layout"
+                >
                 <Button
-                    android:layout_marginLeft="10dp"
+                    android:layout_marginLeft="5px"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:id="@+id/bt_centerpoint"
-                    android:textSize="20sp"
+                    android:textSize="18px"
                     android:text="设置原点"
                     />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:id="@+id/ll_path"
-                >
-
-                <LinearLayout
-                    android:layout_height="wrap_content"
-                    android:layout_width="wrap_content"
-                    android:orientation="horizontal"
-                    >
-                    <Button
-                        android:layout_marginLeft="10dp"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:id="@+id/bt_path"
-                        android:textSize="20sp"
-                        android:text="设置路径"
-                        />
-
-                    <Button
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="20sp"
-                        android:text="选择路线"
-                        android:id="@+id/bt_choicepath"
-                        />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="20sp"
-                        android:text="路线: 1"
-                        android:textColor="#ff0000"
-                        android:id="@+id/tv_path"
-                        />
-
-                    <Button
-                        android:layout_marginLeft="10dp"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:id="@+id/bt_deletepath"
-                        android:textSize="20sp"
-                        android:text="删除路径点"
-                        />
-
-                </LinearLayout>
-
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:id="@+id/ll_pathinfo"
                     >
-
                     <Button
-                        android:layout_marginLeft="10dp"
+                        android:layout_marginLeft="5px"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:id="@+id/bt_setrobotpoint"
-                        android:textSize="20sp"
+                        android:textSize="18px"
                         android:text="设置位置"
                         />
-
-                    <TextView
-                        android:layout_marginLeft="5dp"
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="20sp"
-                        android:text="--,--"
-                        android:id="@+id/tv_robotpoint"
-                        />
+                        android:orientation="horizontal"
+                        >
+                        <EditText
+                            android:layout_marginLeft="5px"
+                            android:layout_width="50px"
+                            android:layout_height="wrap_content"
+                            android:inputType="numberSigned|numberDecimal|"
+                            android:id="@+id/et_robotpoint_x"
+                            android:textSize="18px"
+                            android:visibility="gone"
+                            android:hint="x"
+                            />
+                        <EditText
+                            android:layout_marginLeft="5px"
+                            android:textSize="18px"
+                            android:layout_width="50px"
+                            android:layout_height="wrap_content"
+                            android:inputType="numberSigned|numberDecimal"
+                            android:visibility="gone"
+                            android:id="@+id/et_robotpoint_y"
+                            android:hint="y"
+                            />
+                        <Button
+                            android:layout_marginLeft="5px"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="18px"
+                            android:id="@+id/bt_confirmrobotpoint"
+                            android:visibility="gone"
+                            android:text="确定"
+                            />
+                    </LinearLayout>
 
-                    <EditText
-                        android:layout_marginLeft="5dp"
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:inputType="number|numberDecimal"
-                        android:id="@+id/et_robotpoint_x"
+                        android:orientation="horizontal"
+                        >
+
+                        <Button
+                            android:layout_marginLeft="5px"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:id="@+id/bt_path"
+                            android:textSize="18px"
+                            android:text="设置路径"
+                            />
+
+                        <Button
+                            android:layout_marginLeft="5px"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:id="@+id/bt_deletepath"
+                            android:textSize="18px"
+                            android:text="删除路径点"
+                            />
+                    </LinearLayout>
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
                         android:visibility="gone"
-                        android:hint="x"
-                        />
+                        android:id="@+id/ll_setpathpoint"
+                        >
+                        <EditText
+                            android:layout_marginLeft="5px"
+                            android:layout_height="wrap_content"
+                            android:layout_width="50px"
+                            android:inputType="numberSigned|numberDecimal|"
+                            android:id="@+id/et_pathpoint_x"
+                            android:textSize="18px"
+                            android:hint="x"
+                            />
+                        <EditText
+                            android:layout_marginLeft="5px"
+                            android:textSize="18px"
+                            android:layout_width="50px"
+                            android:layout_height="wrap_content"
+                            android:inputType="numberSigned|numberDecimal"
+                            android:id="@+id/et_pathpoint_y"
+                            android:hint="y"
+                            />
+                        <Button
+                            android:layout_marginLeft="5px"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="18px"
+                            android:id="@+id/bt_confirmpathpoint"
+                            android:text="确定"
+                            />
+                    </LinearLayout>
 
-                    <EditText
-                        android:layout_marginLeft="5dp"
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:inputType="number|numberDecimal"
-                        android:visibility="gone"
-                        android:id="@+id/et_robotpoint_y"
-                        android:hint="y"
-                        />
+                        android:orientation="horizontal"
+                        >
 
-                    <Button
-                        android:layout_marginLeft="5dp"
+                        <Button
+                            android:layout_marginLeft="5px"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="18px"
+                            android:text="选择路线"
+                            android:id="@+id/bt_choicepath"
+                            />
+
+                        <TextView
+                            android:layout_marginLeft="5px"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="18px"
+                            android:text="路线: 1"
+                            android:textColor="#ff0000"
+                            android:id="@+id/tv_path"
+                            />
+                    </LinearLayout>
+
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="20sp"
-                        android:id="@+id/bt_confirmrobotpoint"
-                        android:visibility="gone"
-                        android:text="确定"
-                        />
+                        android:orientation="horizontal"
+                        >
 
+                        <Button
+                            android:layout_marginLeft="5px"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="18px"
+                            android:text="选择比例尺"
+                            android:id="@+id/bt_scale"
+                            >
+                        </Button>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="18px"
+                            android:text="比例尺 --:--"
+                            android:id="@+id/tv_scale"
+                            />
+                    </LinearLayout>
                 </LinearLayout>
-
 
             </LinearLayout>
 
+            <Button
+                style="@style/map_rightbutton"
+                android:text="漫游行走"
+                android:id="@+id/bt_walk"
+                />
+
             <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="0px"
+                android:orientation="vertical"
+                android:id="@+id/ll_walk"
                 >
 
-                <Button
-                    android:layout_marginLeft="10dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="20sp"
-                    android:text="选择比例尺"
-                    android:id="@+id/bt_scale"
-                    >
-                </Button>
-
                 <TextView
-                    android:layout_marginLeft="5dp"
+                    android:layout_marginLeft="5px"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="#ffffff"
+                    android:textSize="20px"
+                    android:text="请选择漫游模式："
+                    />
+
+                <RadioGroup
+                    android:layout_marginLeft="15px"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/rg_walkmodel"
+                    >
+                    <RadioButton
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="当前线路循环"
+                        android:textSize="18px"
+                        android:id="@+id/rb_single_recycle"
+                        android:textColor="#ffffff"
+                        />
+
+                    <RadioButton
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="有序线路循环"
+                        android:textColor="#ffffff"
+                        android:textSize="18px"
+                        android:id="@+id/rb_order_recycle"
+                        />
+
+                    <RadioButton
+                        android:textColor="#ffffff"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="随机线路循环"
+                        android:textSize="18px"
+                        android:id="@+id/rb_random_recycle"
+                        />
+
+                </RadioGroup>
+                <Button
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="20sp"
-                    android:text="比例尺 --:--"
-                    android:id="@+id/tv_scale"
+                    android:textSize="18px"
+                    android:id="@+id/bt_startwalk"
+                    android:text="START"
+
                     />
             </LinearLayout>
 
+            <Button
+                style="@style/map_rightbutton"
+                android:text="地图还原"
+                android:id="@+id/bt_map_backup"
+                />
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="87px"
+                android:background="@drawable/selector_xiala"
+                android:text="一分钟"
+                android:textColor="#ffffff"
+                android:textSize="25px"
+                android:gravity="center"
+                android:id="@+id/bt_time"
+                />
 
-        </LinearLayout>
+    <!--各种数据-->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@mipmap/youlan"
+        android:orientation="vertical"
+        >
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -382,21 +472,25 @@
                     />
             </LinearLayout>
         </LinearLayout>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             >
             <TextView
+                android:textColor="#ffffff"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingLeft="5dp"
-                android:textSize="20sp"
-                android:lineSpacingExtra="10dp"
-                android:text="加速度单位:  0.000244 G\n角速度单位:  0.061035 °/s\n地磁场单位:  0.006000 Gauss
+                android:paddingLeft="5px"
+                android:textSize="18px"
+                android:lineSpacingExtra="10px"
+                android:text="加速度单位:  0.000244 G\n角速度单位:  0.061035 °/s\n地磁场单位:  0.006 Gauss
                 "
                 />
         </LinearLayout>
     </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
 
 </LinearLayout>

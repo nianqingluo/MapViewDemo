@@ -34,6 +34,11 @@ public class SharePreferenceUtils {
         return issuccess;
     }
 
+    /**
+     * @param context:上下文
+     * @param key:键
+     * @return 如果没有返回 0
+     */
     public  static int getInt(Context context, String key){
         SharedPreferences share = context.getSharedPreferences(SHAREPREFERENCENAME, Context.MODE_PRIVATE);
 

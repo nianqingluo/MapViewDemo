@@ -13,6 +13,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 
 import com.jiadu.bean.IMUDataBean;
@@ -24,6 +25,7 @@ import com.jiadu.impl.MapFragmentPresentImpl;
 import com.jiadu.mapdemo.MainActivity;
 import com.jiadu.mapdemo.R;
 import com.jiadu.mapdemo.util.Constant;
+import com.jiadu.mapdemo.util.SharePreferenceUtils;
 import com.jiadu.mapdemo.util.ToastUtils;
 import com.jiadu.mapdemo.view.MapView;
 
@@ -36,18 +38,30 @@ import java.util.TimerTask;
  */
 public class MapFragment extends Fragment implements View.OnClickListener, IView {
 
-    private final int UPDATETV = 1;
+    public static final String WALKMODEL = "walkmodel";
+    private final int UPDATETV = 1;//用于handler
     private Button mBt_magnify;
     private Button mBt_reduce;
     private MapView mMapview;
     private Button mBt_centerpoint;
     private Button mBt_setpath;
     private boolean isSetPath;
-
     private boolean hasShowScaleInfo = false;
 
+    /**
+     * 0代表当前线路循环
+     * 1代表有序线路循环
+     * 2代表随机线路循环
+     */
+    private int walkModel = 0;
+
+    /**
+     * 1:代表线路 1
+     * 2:代表线路 2
+     * 3:代表线路 3
+     */
     public int mPath = 1;
-    public LinearLayout mLl_path;
+
     private Button mBt_choicepath;
     private Button mBt_deletePath;
     private Button mBt_scale;
@@ -97,12 +111,30 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
             }
         }
     };
-    private TextView mTv_robotpoint;
     private EditText mEt_robot_x;
     private EditText mEt_robot_y;
     private Button mBt_confirmrobotpoint;
     private MainActivity mActivity;
     private TextView mTv_path;
+    private Button mBt_operate;
+    private Button mBt_path_layout;
+    private Button mBt_walk;
+    private Button mBt_map_backup;
+
+    private boolean operateShowing =false;
+    private boolean pathLayoutShowing = false;
+    private boolean walkShowing = false;
+    private LinearLayout mLl_operate;
+    private LinearLayout mLl_path_layout;
+    private LinearLayout mLl_walk;
+    private RadioGroup mRg_walkmodel;
+    public View mLl_path;
+    private Button mBt_startwalk;
+    private View mLl_setpathpoint;
+    private EditText mEt_pathpoint_x;
+    private EditText mEt_pathpoint_y;
+    private Button mBt_confirmpathpoint;
+
 
     public void setPath(int path) {
         this.mPath = path;
@@ -132,13 +164,13 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-        if (mRootView!=null){
-
-            return mRootView;
-        }
         if (mActivity==null){
 
             mActivity = (MainActivity) getActivity();
+        }
+        if (mRootView!=null){
+
+            return mRootView;
         }
 
         mRootView = inflater.inflate(R.layout.fragment_map, null);
@@ -153,26 +185,39 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
     private void initData() {
         mIPresent = new MapFragmentPresentImpl(this);
 
+        walkModel=SharePreferenceUtils.getInt(mActivity, WALKMODEL);
+
+        switch (walkModel){
+            case 0:
+                mRg_walkmodel.check(R.id.rb_single_recycle);
+
+            break;
+            case 1:
+                mRg_walkmodel.check(R.id.rb_order_recycle);
+
+            break;
+            case 2:
+                mRg_walkmodel.check(R.id.rb_random_recycle);
+
+            break;
+            default:
+            break;
+        }
+
     }
 
     private void initView() {
 
         mBt_magnify = (Button) findViewById(R.id.bt_magnify);
-
         mBt_reduce = (Button) findViewById(R.id.bt_reduce);
-
         mBt_centerpoint = (Button) findViewById(R.id.bt_centerpoint);
-
-        mBt_setpath = (Button) findViewById(R.id.bt_path);
-
-        mLl_path = (LinearLayout) findViewById(R.id.ll_path);
 
         mBt_choicepath = (Button) findViewById(R.id.bt_choicepath);
 
         mBt_scale = (Button) findViewById(R.id.bt_scale);
+        mBt_setpath = (Button) findViewById(R.id.bt_path);
 
         mBt_deletePath = (Button) findViewById(R.id.bt_deletepath);
-
         mTv_scale = (TextView) findViewById(R.id.tv_scale);
 
         mTv_linearacc_x = (TextView) findViewById(R.id.tv_linearacc_x);
@@ -192,14 +237,59 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
         mTv_yaw = (TextView) findViewById(R.id.tv_yaw);
 
         mTv_pressure = (TextView) findViewById(R.id.tv_pressure);
-
         mBt_setrobotpoint = (Button) findViewById(R.id.bt_setrobotpoint);
         mBt_confirmrobotpoint = (Button) findViewById(R.id.bt_confirmrobotpoint);
 
-        mTv_robotpoint = (TextView) findViewById(R.id.tv_robotpoint);
         mEt_robot_x = (EditText) findViewById(R.id.et_robotpoint_x);
         mEt_robot_y = (EditText) findViewById(R.id.et_robotpoint_y);
         mTv_path = (TextView) findViewById(R.id.tv_path);
+
+        mBt_operate = (Button) findViewById(R.id.bt_operate);
+        mBt_walk = (Button) findViewById(R.id.bt_walk);
+        mBt_path_layout = (Button) findViewById(R.id.bt_path_layout);
+        mBt_map_backup = (Button) findViewById(R.id.bt_map_backup);
+
+        mLl_operate = (LinearLayout) findViewById(R.id.ll_operate);
+        mLl_path_layout = (LinearLayout) findViewById(R.id.ll_path_layout);
+        mLl_walk = (LinearLayout) findViewById(R.id.ll_walk);
+
+        mBt_startwalk = (Button) findViewById(R.id.bt_startwalk);
+        mLl_path = findViewById(R.id.ll_pathinfo);
+        mRg_walkmodel = (RadioGroup) findViewById(R.id.rg_walkmodel);
+
+        mLl_setpathpoint = findViewById(R.id.ll_setpathpoint);
+        mEt_pathpoint_x = (EditText) findViewById(R.id.et_pathpoint_x);
+        mEt_pathpoint_y = (EditText) findViewById(R.id.et_pathpoint_y);
+        mBt_confirmpathpoint = (Button) findViewById(R.id.bt_confirmpathpoint);
+
+        mRg_walkmodel.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+
+                switch (checkedId){
+                    case R.id.rb_single_recycle:
+                        SharePreferenceUtils.putInt(mActivity,WALKMODEL,0);
+                    break;
+                    case R.id.rb_order_recycle:
+                        SharePreferenceUtils.putInt(mActivity,WALKMODEL,1);
+                    break;
+                    case R.id.rb_random_recycle:
+                        SharePreferenceUtils.putInt(mActivity,WALKMODEL,2);
+                    break;
+                    default:
+                    break;
+                }
+            }
+        });
+
+        mBt_startwalk.setOnClickListener(this);
+
+        mBt_confirmpathpoint.setOnClickListener(this);
+
+        mBt_operate.setOnClickListener(this);
+        mBt_walk.setOnClickListener(this);
+        mBt_path_layout.setOnClickListener(this);
+        mBt_map_backup.setOnClickListener(this);
 
         mBt_confirmrobotpoint.setOnClickListener(this);
         mBt_setrobotpoint.setOnClickListener(this);
@@ -212,7 +302,6 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
         mBt_choicepath.setOnClickListener(this);
 
         mMapview = (MapView) findViewById(R.id.mv_mapview);
-
     }
 
     private View findViewById(int viewId) {
@@ -226,6 +315,14 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
     @Override
     public void onResume() {
         super.onResume();
+
+        if (!operateShowing){
+             mLl_operate.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0));
+        }
+        if (!operateShowing){
+             mLl_path_layout.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0));
+        }
+
 
         if (!hasShowScaleInfo){
             hasShowScaleInfo = true;
@@ -332,9 +429,11 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
                 mBt_setpath.setText(isSetPath?"完成设置":"设置路径");
                 if (isSetPath){
                     mMapview.setCanSetPath(true);
+                    mLl_setpathpoint.setVisibility(View.VISIBLE);
                     mMapview.setCanSetCenterPoint(false);
                 }
                 else {
+                    mLl_setpathpoint.setVisibility(View.GONE);
                     mMapview.setCanSetPath(false);
                 }
                 break;
@@ -379,6 +478,65 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
 
                 break;
 
+            case R.id.bt_operate:
+
+                if (operateShowing){
+
+                    mLl_operate.setLayoutParams(new LinearLayout.LayoutParams(-1,0));
+                }else {
+                    mLl_operate.setLayoutParams(new LinearLayout.LayoutParams(-1,-2));
+
+                }
+
+
+                operateShowing=!operateShowing;
+
+                break;
+            case R.id.bt_path_layout:
+
+                if (pathLayoutShowing){
+                    mLl_path_layout.setLayoutParams(new LinearLayout.LayoutParams(-1,0));
+                }else {
+
+                    mLl_path_layout.setLayoutParams(new LinearLayout.LayoutParams(-1,-2));
+                }
+
+                pathLayoutShowing=!pathLayoutShowing;
+
+                break;
+            case R.id.bt_walk:
+
+                if (walkShowing){
+                    mLl_walk.setLayoutParams(new LinearLayout.LayoutParams(-1,0));
+                }else {
+
+                    mLl_walk.setLayoutParams(new LinearLayout.LayoutParams(-1,-2));
+                }
+
+                walkShowing=!walkShowing;
+
+                break;
+            case R.id.bt_startwalk://开始地图漫游
+
+
+
+                break;
+            case R.id.bt_confirmpathpoint://开始地图漫游
+
+                try {
+                    float x = Float.parseFloat(mEt_pathpoint_x.getText().toString());
+                    float y = Float.parseFloat(mEt_pathpoint_y.getText().toString());
+
+                    int v1 = (int) (x * 100 * MapView.mGridWidth / Constant.DISTANCEPERGRID / mActivity.getMapScaleFactor() + mMapview.getCenterPoint().x+0.5f);
+                    int v2 = (int) (mMapview.getCenterPoint().y - y * MapView.mGridWidth * 100 / Constant.DISTANCEPERGRID / mActivity.getMapScaleFactor()+0.5f);
+
+                    mMapview.addPathPoint(mPath,new Point(v1,v2));
+
+                } catch (NumberFormatException e) {
+                    e.printStackTrace();
+                }
+
+                break;
             default:
                 break;
         }
@@ -388,14 +546,12 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
     public void isSetRobotPoint(boolean flag){
 
         if (flag){
-            mTv_robotpoint.setVisibility(View.GONE);
             mEt_robot_x.setVisibility(View.VISIBLE);
             mEt_robot_y.setVisibility(View.VISIBLE);
             mBt_confirmrobotpoint.setVisibility(View.VISIBLE);
 
         }else {
 
-            mTv_robotpoint.setVisibility(View.VISIBLE);
             mEt_robot_x.setVisibility(View.GONE);
             mEt_robot_y.setVisibility(View.GONE);
             mBt_confirmrobotpoint.setVisibility(View.GONE);
@@ -416,8 +572,8 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
 
     public void setRobotPointInfo() {
 
-        if (mEt_robot_x==null||mEt_robot_y==null||mTv_robotpoint==null){
-        return;
+        if (mEt_robot_x==null||mEt_robot_y==null){
+            return;
         }
 
         Point point = mMapview.getRobortPointInMap();
@@ -435,7 +591,7 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
         mEt_robot_y.setText(y);
         mEt_robot_y.setSelection(y.length());
 
-        mTv_robotpoint.setText("当前位置："+x+" , "+y);
+        mActivity.setPosition("当前位置："+x+" , "+y);
 //        mEt_robot_x.setText(point.x/40.0*10*mActivity.getMapScaleFactor()/100+"");
 //        mEt_robot_x.setSelection(mEt_robot_x.getText().length());
 //
