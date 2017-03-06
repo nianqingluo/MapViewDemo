@@ -3,6 +3,8 @@ package com.jiadu.mapdemo;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -11,12 +13,14 @@ import android.widget.Button;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 
+import com.jiadu.broadcast.MessageBroadcast;
 import com.jiadu.fragment.CleanFragment;
 import com.jiadu.fragment.MapFragment;
 import com.jiadu.fragment.PowerFragment;
 import com.jiadu.iinterface.IViewMainActivity;
 import com.jiadu.mapdemo.util.LogUtil;
 import com.jiadu.mapdemo.util.SharePreferenceUtils;
+import com.jiadu.service.ServerSocketUtil;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -45,6 +49,8 @@ public class MainActivity extends AppCompatActivity implements IViewMainActivity
     private RadioGroup mRg;
     private TextView mTv_menu;
     private TextView mTv_position;
+    private MessageBroadcast mMbReceive;
+    private Intent mIntentService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,6 +74,25 @@ public class MainActivity extends AppCompatActivity implements IViewMainActivity
         initView();
 
         initData();
+        
+        startSocketService();
+        
+        registerSocketReceiver();
+    }
+
+    private void registerSocketReceiver() {
+
+        mMbReceive = new MessageBroadcast();
+        IntentFilter filter =  new IntentFilter("com.jdrd.fragment.Map");
+
+        registerReceiver(mMbReceive,filter);
+    }
+
+    private void startSocketService() {
+
+        mIntentService = new Intent(this, ServerSocketUtil.class);
+
+        startService(mIntentService);
     }
 
     private void initData() {
@@ -86,14 +111,6 @@ public class MainActivity extends AppCompatActivity implements IViewMainActivity
     }
 
     private void initView() {
-
-//        mBt_power = (Button) findViewById(R.id.bt_power);
-//        mBt_clean = (Button) findViewById(R.id.bt_clean);
-//        mBt_map = (Button) findViewById(R.id.bt_map);
-//
-//        mBt_power.setOnClickListener(this);
-//        mBt_clean.setOnClickListener(this);
-//        mBt_map.setOnClickListener(this);
 
         mRg = (RadioGroup) findViewById(R.id.rg_mainactivity);
         mTv_menu = (TextView) findViewById(R.id.tv_mainactivity_menu);
@@ -153,8 +170,6 @@ public class MainActivity extends AppCompatActivity implements IViewMainActivity
 
             mMf = (MapFragment) mFM.findFragmentByTag(MainActivity.TAG_FRAGMENT_MAP);
         }
-
-
         switch (mapScale){
             case 0:
                 mMf.mTv_scale.setText("比例尺 "+"1:10");
@@ -203,11 +218,13 @@ public class MainActivity extends AppCompatActivity implements IViewMainActivity
         return temp;
     }
 
-
-
     @Override
     public void finish() {
         super.finish();
+
+        unregisterReceiver(mMbReceive);
+
+        stopService(mIntentService);
 
         System.exit(2);
     }
@@ -238,10 +255,12 @@ public class MainActivity extends AppCompatActivity implements IViewMainActivity
 
     @Override
     public void OpenSetting() {
+
     }
 
     @Override
     public void setPosition(String position) {
+
         mTv_position.setText(position);
     }
 }

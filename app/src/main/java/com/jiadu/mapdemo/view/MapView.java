@@ -9,7 +9,6 @@ import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Point;
-import android.graphics.PointF;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
@@ -18,11 +17,14 @@ import android.widget.ImageView;
 import com.jiadu.fragment.MapFragment;
 import com.jiadu.mapdemo.MainActivity;
 import com.jiadu.mapdemo.R;
+import com.jiadu.mapdemo.util.ArrowUtil;
 import com.jiadu.mapdemo.util.Constant;
 import com.jiadu.mapdemo.util.MyDataBaseUtil;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 /**
  * Created by Administrator on 2017/2/13.
@@ -43,10 +45,10 @@ public class MapView extends ImageView {
     private Paint mPathPaint;
     private Point mCenterPoint = null;
     private boolean canSetCenterPoint = false;
-    private Point mRobortPoint = new Point();  //记录robort在地图中的位置
+    private Point mRobotPoint = new Point();  //记录robort在地图中的位置
 
     private float mDirectionAngle = 0;
-
+    private Random mRandom = new Random();
     private boolean canSetPath = false;
     private float mScale = 1;     //地图缩放比例
     private float mTranslateX = 0;//X平移的距离
@@ -73,7 +75,7 @@ public class MapView extends ImageView {
     private boolean hadDrawGridBitmap = false;
 
     private int mPathNum =1;
-    private Bitmap mRobortBitMapJainTou;
+    private Bitmap mRobotBitMapJainTou;
 
     private boolean canSetRobotPoint = false;
     private MapFragment mMapFragment;
@@ -81,7 +83,24 @@ public class MapView extends ImageView {
     private Bitmap mCenterPointBitMap =null;
     private Bitmap mRobotBitMapTouXiang =null;
 
-    private PointF tempPointF = null;
+    private Point tempPoint = null;
+
+    private int mCurrentPath=1; //当前漫游的路径
+    private int mCurrentListPosition=0;//当前漫游路劲中的点
+    private boolean hasFinishLoop = false;//表示漫游1圈是否完成回到原点
+
+    private Point intermediatePoint1 = null;
+    private Point intermediatePoint2 = null;
+    private Point intermediatePoint3 = null;
+
+
+    public void setCurrentPointPosition(int currentPointPosition) {
+        this.mCurrentPath = currentPointPosition;
+    }
+    public void setCurrentPath(int currentPath) {
+        this.mCurrentListPosition = currentPath;
+    }
+
 
     public boolean isCanSetRobotPoint() {
         return canSetRobotPoint;
@@ -99,13 +118,14 @@ public class MapView extends ImageView {
     /**
      * @param point:在map中的点
      */
-    public void setRobortPointInMap(Point point){
+    public void setRobotPointInMap(Point point){
 
         if (point==null){
             return;
         }
 
-        mRobortPoint = point;
+        mRobotPoint = matchClosestPoint(point);
+
         if (mMapFragment!=null){
             mMapFragment.setRobotPointInfo();
         }
@@ -116,14 +136,16 @@ public class MapView extends ImageView {
     /**
      * @param point:在View位置中的点
      */
-    public void setRobortPointInView(Point point){
+    public void setRobotPointInView(Point point){
 
         if (point==null){
             return;
         }
 
-        mRobortPoint = transferCoordinateToMap(point);
-        
+        Point point1 = transferCoordinateToMap(point);
+
+        mRobotPoint = matchClosestPoint(point1);
+
         if (mMapFragment!=null){
             mMapFragment.setRobotPointInfo();
         }
@@ -134,17 +156,17 @@ public class MapView extends ImageView {
     /**
      * @return robot在map中的点
      */
-    public Point getRobortPointInMap(){
+    public Point getRobotPointInMap(){
 
-        return mRobortPoint;
+        return mRobotPoint;
     }
 
     /**
      * @return robot在View中的位置
      */
-    public Point getRobortPointInView(){
+    public Point getRobotPointInView(){
 
-        return transferCoordinateToView(mRobortPoint);
+        return transferCoordinateToView(mRobotPoint);
     }
 
     public void setDirectionAngle(float directionAngle) {
@@ -157,27 +179,124 @@ public class MapView extends ImageView {
         mPathNum = pathNum;
     }
 
-    public void addPathPoint(int pathNum, Point point){
-        Point point1 = transferCoordinateToMap(point);
-        mDbUtil.addPoint(point.x,point.y,pathNum);
+    private double getDistance(Point point1,Point point2){
+
+        return  Math.sqrt((point1.x-point2.x)*(point1.x-point2.x)+(point1.y-point2.y)*(point1.y-point2.y));
+    }
+
+    /**
+     * @param pathNum:路径号
+     * @param pointx:要增加的点
+     * @param flag1:是否需要更加入数据库
+     * @param flag2:是否需要进行坐标转换，如果点对应的坐标是View中的坐标，则flag为true，如果点对应的坐标是map中的坐标，则flag为false
+     */
+    public void addPathPoint(int pathNum, Point pointx,boolean flag1,boolean flag2){
+
+            Point pointOnMap = pointx;
+        if (flag2){
+
+            pointOnMap = transferCoordinateToMap(pointx);
+
+        }
+
+
+        Point point1 = matchClosestPoint(pointOnMap);
+
         switch (pathNum){
             case 1:
-//                pathList1.add(point);
-                if (pathListAfterTransfer1.contains(point)){
+//               保证相邻的两个点不重复
+                if (pathListAfterTransfer1.size()>0 && getDistance(pathListAfterTransfer1.get(pathListAfterTransfer1.size()-1),point1)<mGridWidth){
                     return;
+                }
+                if (pathListAfterTransfer1.size() == 0){
+
+                    if (getDistance(point1,mCenterPoint) <mGridWidth){
+                        return;
+                    }
+                }
+
+                if (pathListAfterTransfer1.size() == 0){//说明此前没有路径点
+
+                    if (point1.x == mCenterPoint.x || point1.y == mCenterPoint.y){//说明x轴或者y轴有一个是Ok的，不需要增加中间点
+                        pathListAfterTransfer1.add(point1);
+                        path1.lineTo(point1.x,point1.y);
+                        path1Arrow = pointToArrow(pathListAfterTransfer1);
+                        break;
+                    }else { //说明需要增加一个中间点
+
+                        Point pointtemp = new Point(point1.x,mCenterPoint.y);
+//                        pathListAfterTransfer1.add(pointtemp);
+                        path1.lineTo(pointtemp.x,pointtemp.y);
+//                        mDbUtil.addPoint(pointtemp.x,pointtemp.y,pathNum);
+                    }
+                }
+
+                else if (pathListAfterTransfer1.size() != 0){//说明之前有路径点
+                    //说明不需要增加一个中间点
+                    if (point1.x == pathListAfterTransfer1.get(pathListAfterTransfer1.size()-1).x || point1.y == pathListAfterTransfer1.get(pathListAfterTransfer1.size()-1).y){//说明x轴或者y轴有一个是Ok的
+                        pathListAfterTransfer1.add(point1);
+                        path1.lineTo(point1.x,point1.y);
+                        path1Arrow = pointToArrow(pathListAfterTransfer1);
+                        break;
+
+                    }else { //说明需要增加一个中间点
+
+                        Point pointtemp = new Point(point1.x,pathListAfterTransfer1.get(pathListAfterTransfer1.size()-1).y);
+//                        pathListAfterTransfer1.add(pointtemp);
+                        path1.lineTo(pointtemp.x,pointtemp.y);
+//                        mDbUtil.addPoint(pointtemp.x,pointtemp.y,pathNum);
+                    }
                 }
 
                 pathListAfterTransfer1.add(point1);
                 path1.lineTo(point1.x,point1.y);
                 path1Arrow = pointToArrow(pathListAfterTransfer1);
 
+
             break;
             case 2:
-//                pathList2.add(point);
-
-
-                if (pathListAfterTransfer2.contains(point)){
+//                保证相邻的两个点不重复
+                if (pathListAfterTransfer2.size()>0 && getDistance(pathListAfterTransfer2.get(pathListAfterTransfer2.size()-1),point1)<mGridWidth){
                     return;
+                }
+                if (pathListAfterTransfer2.size() == 0){
+                    if (getDistance(point1,mCenterPoint) <mGridWidth){
+                        return;
+                    }
+                }
+
+
+                if (pathListAfterTransfer2.size() == 0){//说明此前没有路径点
+
+                    if (point1.x == mCenterPoint.x || point1.y == mCenterPoint.y){//说明x轴或者y轴有一个是Ok的，不需要增加中间点
+                        pathListAfterTransfer2.add(point1);
+                        path2.lineTo(point1.x,point1.y);
+                        path2Arrow = pointToArrow(pathListAfterTransfer2);
+                        break;
+                    }else { //说明需要增加一个中间点
+
+                        Point pointtemp = new Point(point1.x,mCenterPoint.y);
+//                        pathListAfterTransfer2.add(pointtemp);
+                        path2.lineTo(pointtemp.x,pointtemp.y);
+//                        mDbUtil.addPoint(pointtemp.x,pointtemp.y,pathNum);
+                    }
+                }
+
+                else if (pathListAfterTransfer2.size() != 0){//说明之前有路径点
+                    //说明不需要增加中间点
+                    if (point1.x == pathListAfterTransfer2.get(pathListAfterTransfer2.size()-1).x || point1.y == pathListAfterTransfer2.get(pathListAfterTransfer2.size()-1).y){//说明x轴或者y轴有一个是Ok的
+                        pathListAfterTransfer2.add(point1);
+                        path2.lineTo(point1.x,point1.y);
+                        path2Arrow = pointToArrow(pathListAfterTransfer2);
+                        break;
+
+                    }else { //说明需要增加一个中间点
+
+                        Point pointtemp = new Point(point1.x,pathListAfterTransfer2.get(pathListAfterTransfer2.size()-1).y);
+//                        pathListAfterTransfer2.add(pointtemp);
+                        path2.lineTo(pointtemp.x,pointtemp.y);
+//                        mDbUtil.addPoint(pointtemp.x,pointtemp.y,pathNum);
+                    }
                 }
 
                 pathListAfterTransfer2.add(point1);
@@ -185,28 +304,71 @@ public class MapView extends ImageView {
                 path2Arrow = pointToArrow(pathListAfterTransfer2);
 
             break;
-            case 3:
-//                pathList3.add(point);
 
-                if (pathListAfterTransfer3.contains(point)){
+            case 3:
+//                保证相邻的两个点不重复
+                if (pathListAfterTransfer3.size()>0 && getDistance(pathListAfterTransfer3.get(pathListAfterTransfer3.size()-1),point1)<mGridWidth){
                     return;
+                }
+                if (pathListAfterTransfer3.size() == 0){
+                    if (getDistance(point1,mCenterPoint) <mGridWidth){
+                        return;
+                    }
+                }
+
+
+                if (pathListAfterTransfer3.size() == 0){//说明此前没有路径点
+
+                    if (point1.x == mCenterPoint.x || point1.y == mCenterPoint.y){//说明x轴或者y轴有一个是Ok的，不需要增加中间点
+                        pathListAfterTransfer3.add(point1);
+                        path3.lineTo(point1.x,point1.y);
+                        path3Arrow = pointToArrow(pathListAfterTransfer3);
+                        break;
+                    }else { //说明需要增加一个中间点
+
+                        Point pointtemp = new Point(point1.x,mCenterPoint.y);
+//                        pathListAfterTransfer3.add(pointtemp);
+                        path3.lineTo(pointtemp.x,pointtemp.y);
+//                        mDbUtil.addPoint(pointtemp.x,pointtemp.y,pathNum);
+                    }
+                }
+
+                else if (pathListAfterTransfer3.size() != 0){//说明之前有路径点
+
+                    //说明不需要增加中间点
+                    if (point1.x == pathListAfterTransfer3.get(pathListAfterTransfer3.size()-1).x || point1.y == pathListAfterTransfer3.get(pathListAfterTransfer3.size()-1).y){//说明x轴或者y轴有一个是Ok的
+                        pathListAfterTransfer3.add(point1);
+                        path3.lineTo(point1.x,point1.y);
+                        path3Arrow = pointToArrow(pathListAfterTransfer3);
+                        break;
+
+                    }else { //说明需要增加一个中间点
+
+                        Point pointtemp = new Point(point1.x,pathListAfterTransfer3.get(pathListAfterTransfer3.size()-1).y);
+//                        pathListAfterTransfer3.add(pointtemp);
+                        path3.lineTo(pointtemp.x,pointtemp.y);
+//                        mDbUtil.addPoint(pointtemp.x,pointtemp.y,pathNum);
+                    }
                 }
 
                 pathListAfterTransfer3.add(point1);
                 path3.lineTo(point1.x,point1.y);
                 path3Arrow = pointToArrow(pathListAfterTransfer3);
-            break;
+                break;
             default:
             break;
         }
 
-        invalidate();
+        drawLastPointAndArrow(pathNum,point1);
+        if (flag1){
+            mDbUtil.addPoint(point1.x,point1.y,pathNum);
+        }
+            invalidate();
     }
 
     public void deletePathPoint(int pathNum){
         switch (pathNum){
             case 1:
-
                 if (pathListAfterTransfer1.size()>=1){
 
                     Point pt = pathListAfterTransfer1.get(pathListAfterTransfer1.size()-1);
@@ -215,14 +377,25 @@ public class MapView extends ImageView {
 
                     pathListAfterTransfer1.remove(pathListAfterTransfer1.size()-1);
 
+                    List<Point> pathListAfterTransfertemp1 =pathListAfterTransfer1;
+                    pathListAfterTransfer1 = new ArrayList<Point>();
+
                     path1.reset();
+
                     path1.moveTo(mCenterPoint.x ,mCenterPoint.y);
-                    for (Point p:pathListAfterTransfer1) {
-                        path1.lineTo(p.x,p.y);
+                    for (Point p:pathListAfterTransfertemp1) {
+                        addPathPoint(pathNum,p,false,false);
                     }
 
                     path1Arrow = pointToArrow(pathListAfterTransfer1);
                 }
+                
+                if (pathListAfterTransfer1==null||pathListAfterTransfer1.size()==0){
+                    drawLastPointAndArrow(pathNum,null);
+                }else {
+                    drawLastPointAndArrow(pathNum,pathListAfterTransfer1.get(pathListAfterTransfer1.size()-1));
+                }
+
 
                 break;
             case 2:
@@ -233,12 +406,21 @@ public class MapView extends ImageView {
                     mDbUtil.deletePoint(pt.x,pt.y,pathNum);
 
                     pathListAfterTransfer2.remove(pathListAfterTransfer2.size()-1);
+
+                    List<Point> pathListAfterTransferTemp2 = pathListAfterTransfer2;
+
                     path2.reset();
                     path2.moveTo(mCenterPoint.x ,mCenterPoint.y);
-                    for (Point p:pathListAfterTransfer2) {
-                        path2.lineTo(p.x,p.y);
+                    pathListAfterTransfer2 = new ArrayList<Point>();
+                    for (Point p:pathListAfterTransferTemp2) {
+                        addPathPoint(pathNum,p,false,false);
                     }
                     path2Arrow = pointToArrow(pathListAfterTransfer2);
+                }
+                if (pathListAfterTransfer2==null||pathListAfterTransfer2.size()==0){
+                    drawLastPointAndArrow(pathNum,null);
+                }else {
+                    drawLastPointAndArrow(pathNum,pathListAfterTransfer2.get(pathListAfterTransfer2.size()-1));
                 }
 
                 break;
@@ -250,13 +432,23 @@ public class MapView extends ImageView {
                     mDbUtil.deletePoint(pt.x,pt.y,pathNum);
 
                     pathListAfterTransfer3.remove(pathListAfterTransfer3.size()-1);
+
+                    List<Point> pathListAfterTransferTemp3 = pathListAfterTransfer3;
+
+                    pathListAfterTransfer3 = new ArrayList<Point>();
+
                     path3.reset();
                     path3.moveTo(mCenterPoint.x ,mCenterPoint.y);
-                    for (Point p:pathListAfterTransfer3) {
-                        path3.lineTo(p.x,p.y);
+                    for (Point p:pathListAfterTransferTemp3) {
+                        addPathPoint(pathNum,p,false,false);
                     }
 
                     path3Arrow = pointToArrow(pathListAfterTransfer3);
+                }
+                if (pathListAfterTransfer3==null||pathListAfterTransfer3.size()==0){
+                    drawLastPointAndArrow(pathNum,null);
+                }else {
+                    drawLastPointAndArrow(pathNum,pathListAfterTransfer3.get(pathListAfterTransfer3.size()-1));
                 }
             break;
             default:
@@ -301,9 +493,11 @@ public class MapView extends ImageView {
     public boolean isCanSetCenterPoint() {
         return canSetCenterPoint;
     }
+
     public void setCanSetCenterPoint(boolean canSetCenterPoint) {
         this.canSetCenterPoint = canSetCenterPoint;
     }
+
     public float getScale() {
         return mScale;
     }
@@ -344,7 +538,7 @@ public class MapView extends ImageView {
         //画网格的bitmap
 //        drawGridBitmap();
 
-        mRobortBitMapJainTou = BitmapFactory.decodeResource(mContext.getResources(), R.mipmap.jiantou);
+        mRobotBitMapJainTou = BitmapFactory.decodeResource(mContext.getResources(), R.mipmap.jiantou);
 
         mCenterPointBitMap = BitmapFactory.decodeResource(mContext.getResources(),R.mipmap.qi);
 
@@ -386,59 +580,109 @@ public class MapView extends ImageView {
         mDbUtil = new MyDataBaseUtil(mContext);
 
         mCenterPoint = mDbUtil.queryCenterPoint(TYPE_CENTERPOINT);
+        setRobotPointInMap(mCenterPoint);
 
-        setRobortPointInMap(mCenterPoint);
+        if (mCenterPoint == null){
 
-        pathListAfterTransfer1 = mDbUtil.queryPathPoint(1);
-        pathListAfterTransfer2 = mDbUtil.queryPathPoint(2);
-        pathListAfterTransfer3 = mDbUtil.queryPathPoint(3);
+            mDbUtil.deleteAll();
+
+            return;
+        }
+
+
+        List<Point> pathListAfterTransferTemp1 = mDbUtil.queryPathPoint(1);
+        List<Point> pathListAfterTransferTemp2 = mDbUtil.queryPathPoint(2);
+        List<Point> pathListAfterTransferTemp3 = mDbUtil.queryPathPoint(3);
 
         path1.moveTo(mCenterPoint.x ,mCenterPoint.y);
-        for (Point p:pathListAfterTransfer1) {
-            path1.lineTo(p.x,p.y);
+        for (Point p:pathListAfterTransferTemp1) {
+            addPathPoint(1,p,false,false);
+//            path1.lineTo(p.x,p.y);
         }
 
         path1Arrow = pointToArrow(pathListAfterTransfer1);
 
-
         path2.moveTo(mCenterPoint.x ,mCenterPoint.y);
-        for (Point p:pathListAfterTransfer2) {
-            path2.lineTo(p.x,p.y);
+        for (Point p:pathListAfterTransferTemp2) {
+            addPathPoint(2,p,false,false);
         }
 
         path2Arrow = pointToArrow(pathListAfterTransfer2);
 
         path3.moveTo(mCenterPoint.x ,mCenterPoint.y);
-        for (Point p:pathListAfterTransfer3) {
-            path3.lineTo(p.x,p.y);
+        for (Point p:pathListAfterTransferTemp3) {
+            addPathPoint(3,p,false,false);
         }
-
         path3Arrow = pointToArrow(pathListAfterTransfer3);
 
     }
 
     private List<Path> pointToArrow(List<Point> points) {
         List<Path> list = new ArrayList<Path>();
-        
-        if (points == null || points.size()==0){
+
+        if (points == null || points.size() == 0) {
             return list;
         }
-        
-        if (mCenterPoint!=null){
-            list.add(drawArrow(mCenterPoint.x,mCenterPoint.y,points.get(0).x,points.get(0).y));
+
+        if (mCenterPoint != null) {
+            if (points.get(0).y == mCenterPoint.y) {
+
+                if (points.get(0).x < mCenterPoint.x) {
+                    list.add(ArrowUtil.getLeftArrow(points.get(0)));
+                } else if (points.get(0).x > mCenterPoint.x) {
+                    list.add(ArrowUtil.getRightArrow(points.get(0)));
+                }
+            } else if (points.get(0).y > mCenterPoint.y) {
+
+                list.add(ArrowUtil.getDownArrow(points.get(0)));
+            } else {
+                list.add(ArrowUtil.getUpArrow(points.get(0)));
+            }
         }
 
         for (int i = 1; i < points.size(); i++) {
-            Point p = points.get(i);
-            Point lp = points.get(i-1);
-            list.add(drawArrow(lp.x,lp.y,p.x,p.y));
+
+            if (points.get(i).y == points.get(i-1).y) {
+
+                if (points.get(i).x < points.get(i-1).x) {
+                    list.add(ArrowUtil.getLeftArrow(points.get(i)));
+                } else if (points.get(i).x > points.get(i-1).x) {
+                    list.add(ArrowUtil.getRightArrow(points.get(i)));
+                }
+            } else if (points.get(i).y > points.get(i-1).y) {
+
+                list.add(ArrowUtil.getDownArrow(points.get(i)));
+            } else {
+                list.add(ArrowUtil.getUpArrow(points.get(i)));
+            }
         }
 
-        if (mCenterPoint!=null){
-            list.add(drawArrow(points.get(points.size()-1).x,points.get(points.size()-1).y,mCenterPoint.x,mCenterPoint.y));
-        }
         return list;
     }
+//    private List<Path> pointToArrow(List<Point> points) {
+//        List<Path> list = new ArrayList<Path>();
+//
+//        if (points == null || points.size()==0){
+//            return list;
+//        }
+//
+//        if (mCenterPoint!=null){
+//            list.add(drawArrow(mCenterPoint.x,mCenterPoint.y,points.get(0).x,points.get(0).y));
+//
+//        }
+//
+//        for (int i = 1; i < points.size(); i++) {
+//            Point p = points.get(i);
+//            Point lp = points.get(i-1);
+//            list.add(drawArrow(lp.x,lp.y,p.x,p.y));
+//        }
+//
+
+        //画pathPoint最后一个点到center点的arrow
+//        if (mCenterPoint!=null){
+//            list.add(drawArrow(points.get(points.size()-1).x,points.get(points.size()-1).y,mCenterPoint.x,mCenterPoint.y));
+//        }
+//    }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
@@ -450,6 +694,42 @@ public class MapView extends ImageView {
         int temp=width>height?heightMeasureSpec:widthMeasureSpec;
 
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+    }
+
+    private Point matchClosestPoint(Point centerPoint) {
+
+        int x = centerPoint.x / mGridWidth;
+        int y = centerPoint.y / mGridWidth;
+
+        Point point1 = new Point(mGridWidth*x,mGridWidth*y);
+        Point point2 = new Point(mGridWidth*(x+1),mGridWidth*y);
+        Point point3 = new Point(mGridWidth*x,mGridWidth*(y+1));
+        Point point4 = new Point(mGridWidth*(x+1),mGridWidth*(y+1));
+
+        double distance1 = getDistance(centerPoint, point1);
+        double distance2 = getDistance(centerPoint, point2);
+        double distance3 = getDistance(centerPoint, point3);
+        double distance4 = getDistance(centerPoint, point4);
+
+        double[] datas = {distance1,distance2,distance3,distance4};
+
+        Arrays.sort(datas);
+
+        if (datas[0] == distance1){
+            return point1;
+
+        }else if (datas[0] == distance2){
+            return point2;
+
+        }else if (datas[0] == distance3){
+            return point3;
+
+        }else if (datas[0] == distance4){
+
+            return point4;
+        }
+
+        return centerPoint;
     }
 
     @Override
@@ -480,7 +760,7 @@ public class MapView extends ImageView {
 //            canvas.translate(mCenterPoint.x-mCenterPointBitMap.getWidth()/2.0f,mCenterPoint.y-mCenterPointBitMap.getHeight()/2.0f);
             //绘制中心点的圆
 //            canvas.drawCircle(mCenterPoint.x, mCenterPoint.y,15,mPaint);
-            
+
             canvas.drawBitmap(mCenterPointBitMap,mCenterPoint.x- mCenterPointBitMap.getWidth()/2.0f,mCenterPoint.y- mCenterPointBitMap.getHeight()/2.0f,mPaint);
 
         }
@@ -490,112 +770,226 @@ public class MapView extends ImageView {
         for (Point p: pathListAfterTransfer1) {
             canvas.drawCircle(p.x, p.y, 10, mPaint);
         }
-        //绘制path2的point
-        mPaint.setColor(Constant.PATHCOLOR2);
-        for (Point p: pathListAfterTransfer2) {
-            canvas.drawCircle(p.x, p.y, 10, mPaint);
-        }
-        //绘制path3的point
-        mPaint.setColor(Constant.PATHCOLOR3);
-        for (Point p: pathListAfterTransfer3) {
-            canvas.drawCircle(p.x, p.y, 10, mPaint);
-        }
-
         //绘制path1
         mPathPaint.setColor(Constant.PATHCOLOR1);
         canvas.drawPath(path1,mPathPaint);
-        if (pathListAfterTransfer1.size()>1) {
-
-            canvas.drawLine(pathListAfterTransfer1.get(pathListAfterTransfer1.size()-1).x,pathListAfterTransfer1.get(pathListAfterTransfer1.size()-1).y,mCenterPoint.x,mCenterPoint.y,mPathPaint);
-
-        }
+        //绘制最后一个点到centerPoint的路线
+//        if (pathListAfterTransfer1.size()>1) {
+//            canvas.drawLine(pathListAfterTransfer1.get(pathListAfterTransfer1.size()-1).x,pathListAfterTransfer1.get(pathListAfterTransfer1.size()-1).y,mCenterPoint.x,mCenterPoint.y,mPathPaint);
+//        }
         //绘制arrow1
         mArrowPaint.setColor(Constant.PATHCOLOR1);
         for (Path path: path1Arrow) {
             canvas.drawPath(path,mArrowPaint);
         }
-        //绘制arrow1的开始箭头和结束箭头
+        //绘制path1最后一个点到mcenterPoint的path
+        if (intermediatePoint1!=null){
 
+            canvas.drawLine(pathListAfterTransfer1.get(pathListAfterTransfer1.size()-1).x,pathListAfterTransfer1.get(pathListAfterTransfer1.size()-1).y,intermediatePoint1.x,intermediatePoint1.y,mPathPaint);
 
+            canvas.drawLine(intermediatePoint1.x,intermediatePoint1.y,mCenterPoint.x,mCenterPoint.y,mPathPaint);
+
+//            canvas.drawPath(drawArrow(pathListAfterTransfer1.get(pathListAfterTransfer1.size()-1).x,pathListAfterTransfer1.get(pathListAfterTransfer1.size()-1).y,intermediatePoint1.x,intermediatePoint1.y),mArrowPaint);
+
+            canvas.drawPath(drawArrow(intermediatePoint1.x,intermediatePoint1.y,mCenterPoint.x,mCenterPoint.y),mArrowPaint);
+        }else {
+
+            if (pathListAfterTransfer1!=null && pathListAfterTransfer1.size()>0 ){
+
+            canvas.drawLine(pathListAfterTransfer1.get(pathListAfterTransfer1.size()-1).x,pathListAfterTransfer1.get(pathListAfterTransfer1.size()-1).y,mCenterPoint.x,mCenterPoint.y,mPathPaint);
+
+            canvas.drawPath(drawArrow(pathListAfterTransfer1.get(pathListAfterTransfer1.size()-1).x,pathListAfterTransfer1.get(pathListAfterTransfer1.size()-1).y,mCenterPoint.x,mCenterPoint.y),mArrowPaint);
+            }
+        }
+
+        //绘制path2的point
+        mPaint.setColor(Constant.PATHCOLOR2);
+        for (Point p: pathListAfterTransfer2) {
+            canvas.drawCircle(p.x, p.y, 10, mPaint);
+        }
         //绘制path2
         mPathPaint.setColor(Constant.PATHCOLOR2);
         canvas.drawPath(path2,mPathPaint);
-        if (pathListAfterTransfer2.size()>1) {
-            canvas.drawLine(pathListAfterTransfer2.get(pathListAfterTransfer2.size()-1).x,pathListAfterTransfer2.get(pathListAfterTransfer2.size()-1).y,mCenterPoint.x,mCenterPoint.y,mPathPaint);
-        }
+//        if (pathListAfterTransfer2.size()>1) {
+//            canvas.drawLine(pathListAfterTransfer2.get(pathListAfterTransfer2.size()-1).x,pathListAfterTransfer2.get(pathListAfterTransfer2.size()-1).y,mCenterPoint.x,mCenterPoint.y,mPathPaint);
+//        }
         //绘制arrow2
         mArrowPaint.setColor(Constant.PATHCOLOR2);
         for (Path path: path2Arrow) {
             canvas.drawPath(path,mArrowPaint);
         }
 
+        //绘制path2最后一个点到mcenterPoint的path
+        if (intermediatePoint2!=null){
+
+            canvas.drawLine(pathListAfterTransfer2.get(pathListAfterTransfer2.size()-1).x,pathListAfterTransfer2.get(pathListAfterTransfer2.size()-1).y,intermediatePoint2.x,intermediatePoint2.y,mPathPaint);
+
+            canvas.drawLine(intermediatePoint2.x,intermediatePoint2.y,mCenterPoint.x,mCenterPoint.y,mPathPaint);
+
+//            canvas.drawPath(drawArrow(pathListAfterTransfer2.get(pathListAfterTransfer2.size()-1).x,pathListAfterTransfer2.get(pathListAfterTransfer2.size()-1).y,intermediatePoint2.x,intermediatePoint2.y),mArrowPaint);
+
+            canvas.drawPath(drawArrow(intermediatePoint2.x,intermediatePoint2.y,mCenterPoint.x,mCenterPoint.y),mArrowPaint);
+        }else {
+
+            if (pathListAfterTransfer2!=null && pathListAfterTransfer2.size()>0 ){
+
+                canvas.drawLine(pathListAfterTransfer2.get(pathListAfterTransfer2.size()-1).x,pathListAfterTransfer2.get(pathListAfterTransfer2.size()-1).y,mCenterPoint.x,mCenterPoint.y,mPathPaint);
+
+                canvas.drawPath(drawArrow(pathListAfterTransfer2.get(pathListAfterTransfer2.size()-1).x,pathListAfterTransfer2.get(pathListAfterTransfer2.size()-1).y,mCenterPoint.x,mCenterPoint.y),mArrowPaint);
+            }
+        }
+
+
+        //绘制path3的point
+        mPaint.setColor(Constant.PATHCOLOR3);
+        for (Point p: pathListAfterTransfer3) {
+            canvas.drawCircle(p.x, p.y, 10, mPaint);
+        }
         //绘制path3
         mPathPaint.setColor(Constant.PATHCOLOR3);
         canvas.drawPath(path3,mPathPaint);
-        if (pathListAfterTransfer3.size()>1) {
-            canvas.drawLine(pathListAfterTransfer3.get(pathListAfterTransfer3.size()-1).x,pathListAfterTransfer3.get(pathListAfterTransfer3.size()-1).y,mCenterPoint.x,mCenterPoint.y,mPathPaint);
-        }
+//        if (pathListAfterTransfer3.size()>1) {
+//            canvas.drawLine(pathListAfterTransfer3.get(pathListAfterTransfer3.size()-1).x,pathListAfterTransfer3.get(pathListAfterTransfer3.size()-1).y,mCenterPoint.x,mCenterPoint.y,mPathPaint);
+//        }
         //绘制arrow3
         mArrowPaint.setColor(Constant.PATHCOLOR3);
         for (Path path: path3Arrow) {
             canvas.drawPath(path,mArrowPaint);
         }
 
+        //绘制path3最后一个点到mcenterPoint的path
+        if (intermediatePoint3!=null){
+
+            canvas.drawLine(pathListAfterTransfer3.get(pathListAfterTransfer3.size()-1).x,pathListAfterTransfer3.get(pathListAfterTransfer3.size()-1).y,intermediatePoint3.x,intermediatePoint3.y,mPathPaint);
+
+            canvas.drawLine(intermediatePoint3.x,intermediatePoint3.y,mCenterPoint.x,mCenterPoint.y,mPathPaint);
+
+//            canvas.drawPath(drawArrow(pathListAfterTransfer3.get(pathListAfterTransfer3.size()-1).x,pathListAfterTransfer3.get(pathListAfterTransfer3.size()-1).y,intermediatePoint3.x,intermediatePoint3.y),mArrowPaint);
+
+            canvas.drawPath(drawArrow(intermediatePoint3.x,intermediatePoint3.y,mCenterPoint.x,mCenterPoint.y),mArrowPaint);
+        }else {
+            if (pathListAfterTransfer3!=null && pathListAfterTransfer3.size()>0 ){
+                canvas.drawLine(pathListAfterTransfer3.get(pathListAfterTransfer3.size()-1).x,pathListAfterTransfer3.get(pathListAfterTransfer3.size()-1).y,mCenterPoint.x,mCenterPoint.y,mPathPaint);
+
+                canvas.drawPath(drawArrow(pathListAfterTransfer3.get(pathListAfterTransfer3.size()-1).x,pathListAfterTransfer3.get(pathListAfterTransfer3.size()-1).y,mCenterPoint.x,mCenterPoint.y),mArrowPaint);
+            }
+
+
+        }
+        //在设置路径的时候，预显示点
+        if (tempPoint !=null){
+
+            switch (mPathNum){
+                case 1:
+                    mPaint.setColor(Constant.PATHCOLOR1);
+                    canvas.drawCircle(tempPoint.x, tempPoint.y,10,mPaint);
+
+                    break;
+                case 2:
+                    mPaint.setColor(Constant.PATHCOLOR2);
+                    canvas.drawCircle(tempPoint.x, tempPoint.y,10,mPaint);
+
+                    break;
+                case 3:
+                    mPaint.setColor(Constant.PATHCOLOR3);
+                    canvas.drawCircle(tempPoint.x, tempPoint.y,10,mPaint);
+
+                    break;
+
+                default:
+                    break;
+            }
+        }
+        
         canvas.restore();
 
         //Draw机器人所在的位置
         Matrix matrix = canvas.getMatrix();
 
-        matrix.setRotate(mDirectionAngle , mRobortBitMapJainTou.getWidth()/2.0f, mRobortBitMapJainTou.getHeight()/2.0f);
+        matrix.setRotate(mDirectionAngle , mRobotBitMapJainTou.getWidth()/2.0f, mRobotBitMapJainTou.getHeight()/2.0f);
 
-        matrix.postScale(mScale,mScale, mRobortBitMapJainTou.getWidth()/2.0f, mRobortBitMapJainTou.getHeight()/2.0f);
+        matrix.postScale(mScale,mScale, mRobotBitMapJainTou.getWidth()/2.0f, mRobotBitMapJainTou.getHeight()/2.0f);
 
         canvas.save();
 
-        Point point = transferCoordinateToView(mRobortPoint);
+        Point point = transferCoordinateToView(mRobotPoint);
 
-        canvas.translate(point.x- mRobortBitMapJainTou.getWidth()/2.0f,point.y- mRobortBitMapJainTou.getHeight()/2.0f);
+        canvas.translate(point.x- mRobotBitMapJainTou.getWidth()/2.0f,point.y- mRobotBitMapJainTou.getHeight()/2.0f);
 
-        canvas.drawBitmap(mRobortBitMapJainTou,matrix,null);
+        canvas.drawBitmap(mRobotBitMapJainTou,matrix,null);
         canvas.drawBitmap(mRobotBitMapTouXiang,matrix,null);
         canvas.restore();
 
-        //在设置路径的时候，预显示点
-        if (tempPointF!=null){
-            
-            switch (mPathNum){
-                case 1:
-                    mPaint.setColor(Constant.PATHCOLOR1);
-                    canvas.drawCircle(tempPointF.x,tempPointF.y,10,mPaint);
-
-                break;
-                case 2:
-                    mPaint.setColor(Constant.PATHCOLOR2);
-                    canvas.drawCircle(tempPointF.x,tempPointF.y,10,mPaint);
-
-                break;
-                case 3:
-                    mPaint.setColor(Constant.PATHCOLOR3);
-                    canvas.drawCircle(tempPointF.x,tempPointF.y,10,mPaint);
-
-                break;
-
-                default:
-                break;
-            }
-            
-        }
-        
-
     }
 
-    private Point matchClosestPoint(Point centerPoint) {
+    private void drawLastPointAndArrow(int pathNum,Point point) {
 
-        return centerPoint;
+        switch (pathNum){
+            case 1:{
+                if (point == null){
+                    intermediatePoint1 = null;
+                    return;
+                }else {
+
+                    //说明需要不增加一个中间点
+                    if (point.x == mCenterPoint.x && point.y == mCenterPoint.y){
+                        intermediatePoint1 = null;
+                        return;
+                    }
+                    else if (point.x == mCenterPoint.x || point.y == mCenterPoint.y){//说明x轴或者y轴有一个是Ok的,不需要增加中间点
+                        intermediatePoint1 = null;
+                        return;
+                    }
+                    else {//说明需要增加中间点
+                        intermediatePoint1 = new Point(mCenterPoint.x,point.y);
+                        return;
+                    }
+                }
+            }
+            case 2: {
+                if (point == null) {
+                    intermediatePoint2 = null;
+                    return;
+                } else {
+                    //说明需要不增加一个中间点
+                    if (point.x == mCenterPoint.x && point.y == mCenterPoint.y) {
+                        intermediatePoint2 = null;
+                        return;
+                    } else if (point.x == mCenterPoint.x || point.y == mCenterPoint.y) {//说明x轴或者y轴有一个是Ok的,不需要增加中间点
+                        intermediatePoint2 = null;
+                        return;
+                    } else {//说明需要增加中间点
+                        intermediatePoint2 = new Point(mCenterPoint.x, point.y);
+                        return;
+                    }
+                }
+            }
+            case 3: {
+                if (point == null) {
+                    intermediatePoint3 = null;
+                    return;
+                } else {
+                    //说明需要不增加一个中间点
+                    if (point.x == mCenterPoint.x && point.y == mCenterPoint.y) {
+                        intermediatePoint3 = null;
+                        return;
+                    } else if (point.x == mCenterPoint.x || point.y == mCenterPoint.y) {//说明x轴或者y轴有一个是Ok的,不需要增加中间点
+                        intermediatePoint3 = null;
+                        return;
+                    } else {//说明需要增加中间点
+                        intermediatePoint3 = new Point(mCenterPoint.x, point.y);
+                        return;
+                    }
+                }
+            }
+            default:
+            break;
+        }
     }
 
     /**
      * @param point:在view中的位置
+     * @param isSave:是否保存数据到数据库
      */
     public void setCenterPoint(Point point,boolean isSave){
 
@@ -603,24 +997,29 @@ public class MapView extends ImageView {
               return;
            }
 
-        Point closestPoint =  matchClosestPoint(point);
         //坐标转换
-        mCenterPoint = transferCoordinateToMap(closestPoint);
+        Point point1 = transferCoordinateToMap(point);
+
+        mCenterPoint = matchClosestPoint(point1);
 
         cleanPathPointAndPath(1);
         cleanPathPointAndPath(2);
         cleanPathPointAndPath(3);
-
-        postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                setRobortPointInMap(mCenterPoint);
-            }
-        },200);
+        intermediatePoint1 = null;
+        intermediatePoint2 = null;
+        intermediatePoint3 = null;
 
         invalidate();
 
         if (isSave){
+
+            postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    setRobotPointInMap(mCenterPoint);
+                }
+            },200);
+
             mDbUtil.deleteAll();
             mDbUtil.addPoint(mCenterPoint.x,mCenterPoint.y, TYPE_CENTERPOINT);
         }
@@ -709,13 +1108,15 @@ public class MapView extends ImageView {
                 }
                 else if (isCanSetRobotPoint()){ //说明是要设置机器人图标位置
 
-                    setRobortPointInView(new Point((int)x,(int)y));
+                    setRobotPointInView(new Point((int)x,(int)y));
                     return true;
                 }
 
                 else if(isCanSetPath()){//说明是要设置路径
 
-                    tempPointF = new PointF(x,y);
+                    tempPoint =matchClosestPoint(transferCoordinateToMap(new Point((int)x,(int)y)));
+                    mMapFragment.setPathPointInfo(transferCoordinateToMap(tempPoint));
+
                     invalidate();
                     return true;
 //                    addPathPoint(mPathNum,new Point((int)(x+0.5),(int)(y+0.5)));
@@ -738,11 +1139,12 @@ public class MapView extends ImageView {
                     return true;
                 }
                 else if (isCanSetRobotPoint()){//说明是要设置机器人图标位置
-                    setRobortPointInView(new Point((int)x,(int)y));
+                    setRobotPointInView(new Point((int)x,(int)y));
                     return true;
                 }
                 else if (isCanSetPath()){//说明是要设置路径
-                    tempPointF = new PointF(x,y);
+                    tempPoint =matchClosestPoint(transferCoordinateToMap(new Point((int)x,(int)y)));
+                    mMapFragment.setPathPointInfo(transferCoordinateToMap(tempPoint));
                     invalidate();
                     return true;
                 }
@@ -763,17 +1165,19 @@ public class MapView extends ImageView {
                 float y = event.getY();
 
                 if (isCanSetCenterPoint()){//如果是在设置原点，取消可以设置原点
-                    setCanSetCenterPoint(false);
                     mMapFragment.mLl_path.setVisibility(View.VISIBLE);
                     setCenterPoint(new Point((int)(x+0.5f),(int)(y+0.5f)),true);
+                    setCanSetCenterPoint(false);
                 }
                 else if (isCanSetRobotPoint()){//如果是在设置机器人位置，取消可以设置机器人位置
                     setCanSetRobotPoint(false);
-                    setRobortPointInView(new Point((int)(x+0.5f),(int)(y+0.5f)));
+                    setRobotPointInView(new Point((int)(x+0.5f),(int)(y+0.5f)));
                 }
                 else if (isCanSetPath()){//说明是要设置路径
-                    tempPointF = null;
-                    addPathPoint(mPathNum,new Point((int)(x+0.5),(int)(y+0.5)));
+                    tempPoint =matchClosestPoint(transferCoordinateToMap(new Point((int)x,(int)y)));
+                    mMapFragment.setPathPointInfo(transferCoordinateToMap(tempPoint));
+                    addPathPoint(mPathNum,tempPoint,true,false);
+                    tempPoint = null;
                 }
                 break;
             }
@@ -783,55 +1187,77 @@ public class MapView extends ImageView {
         return true;
     }
 
-    public Path drawArrow(int sx, int sy, int ex, int ey)
-    {
-        double H = 28; // 箭头高度
-        double L = 11; // 底边的一半
-        int x3 = 0;
-        int y3 = 0;
-        int x4 = 0;
-        int y4 = 0;
-        double awrad = Math.atan(L / H); // 箭头角度
-        double arraow_len = Math.sqrt(L * L + H * H); // 箭头的长度
-        double[] arrXY_1 = rotateVec(ex - sx, ey - sy, awrad, true, arraow_len);
-        double[] arrXY_2 = rotateVec(ex - sx, ey - sy, -awrad, true, arraow_len);
-        double x_3 = ex - arrXY_1[0]; // (x3,y3)是第一端点
-        double y_3 = ey - arrXY_1[1];
-        double x_4 = ex - arrXY_2[0]; // (x4,y4)是第二端点
-        double y_4 = ey - arrXY_2[1];
-        Double X3 = new Double(x_3);
-        x3 = X3.intValue();
-        Double Y3 = new Double(y_3);
-        y3 = Y3.intValue();
-        Double X4 = new Double(x_4);
-        x4 = X4.intValue();
-        Double Y4 = new Double(y_4);
-        y4 = Y4.intValue();
-        // 画线
-        //        canvas.drawLine(sx, sy, ex, ey,mPaint);
-        Path triangle = new Path();
-        triangle.moveTo(ex, ey);
-        triangle.lineTo(x3, y3);
-        triangle.lineTo(x4, y4);
-        triangle.close();
-//        canvas.drawPath(triangle,mPaint);
-        return triangle;
+    public Path drawArrow(int sx, int sy, int ex, int ey) {
+
+        return ArrowUtil.drawArrow(sx,sy,ex,ey);
+
     }
 
-    // 计算
-    public double[] rotateVec(int px, int py, double ang, boolean isChLen, double newLen)
-    {
-        double mathstr[] = new double[2];
-        // 矢量旋转函数，参数含义分别是x分量、y分量、旋转角、是否改变长度、新长度
-        double vx = px * Math.cos(ang) - py * Math.sin(ang);
-        double vy = px * Math.sin(ang) + py * Math.cos(ang);
-        if (isChLen) {
-            double d = Math.sqrt(vx * vx + vy * vy);
-            vx = vx / d * newLen;
-            vy = vy / d * newLen;
-            mathstr[0] = vx;
-            mathstr[1] = vy;
+    /**
+     * @param walkModel:运动模式
+     * @return 返回下一个目标点的Point
+     */
+    public Point getPoint(int walkModel){
+
+        jumPtoNextPoint(walkModel);
+
+        switch (mCurrentPath){
+            case 1:
+                if (mCurrentListPosition >= pathListAfterTransfer1.size()){
+
+                    return null;
+                }else {
+                    return pathListAfterTransfer1.get(mCurrentListPosition);
+                }
+
+            case 2:
+                if (mCurrentListPosition >= pathListAfterTransfer2.size()){
+                    return null;
+                }else {
+                    return pathListAfterTransfer2.get(mCurrentListPosition);
+                }
+
+            case 3:
+
+                if (mCurrentListPosition >= pathListAfterTransfer3.size()){
+                    return null;
+                }else {
+                    return pathListAfterTransfer3.get(mCurrentListPosition);
+                }
+
+            default:
+            break;
         }
-        return mathstr;
+        return null;
+    }
+
+
+
+
+
+    private void jumPtoNextPoint(int walkModel) {
+
+        if (hasFinishLoop){
+
+            switch (walkModel){
+                case 1:
+                    mCurrentPath = 1;
+                    mCurrentListPosition =0;
+                break;
+                case 2:
+                    mCurrentPath=((mCurrentPath+1)%3==0?3:(mCurrentPath+1)%3);
+                    mCurrentListPosition =0;
+                break;
+                case 3:
+                    mCurrentPath = mRandom.nextInt(2)+1;
+                    mCurrentListPosition =0;
+                break;
+                default:
+                break;
+            }
+
+        }else {
+
+        }
     }
 }

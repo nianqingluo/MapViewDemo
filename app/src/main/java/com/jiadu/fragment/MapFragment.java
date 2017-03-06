@@ -62,6 +62,8 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
      */
     public int mPath = 1;
 
+
+
     private Button mBt_choicepath;
     private Button mBt_deletePath;
     private Button mBt_scale;
@@ -120,7 +122,6 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
     private Button mBt_path_layout;
     private Button mBt_walk;
     private Button mBt_map_backup;
-
     private boolean operateShowing =false;
     private boolean pathLayoutShowing = false;
     private boolean walkShowing = false;
@@ -129,11 +130,12 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
     private LinearLayout mLl_walk;
     private RadioGroup mRg_walkmodel;
     public View mLl_path;
-    private Button mBt_startwalk;
     private View mLl_setpathpoint;
     private EditText mEt_pathpoint_x;
     private EditText mEt_pathpoint_y;
     private Button mBt_confirmpathpoint;
+    private Button mBt_startwalk;
+    private Button mBt_stopwalk;
 
 
     public void setPath(int path) {
@@ -262,6 +264,8 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
         mEt_pathpoint_y = (EditText) findViewById(R.id.et_pathpoint_y);
         mBt_confirmpathpoint = (Button) findViewById(R.id.bt_confirmpathpoint);
 
+        mBt_stopwalk = (Button) findViewById(R.id.bt_stopwalk);
+
         mRg_walkmodel.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
@@ -282,6 +286,7 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
             }
         });
 
+        mBt_stopwalk.setOnClickListener(this);
         mBt_startwalk.setOnClickListener(this);
 
         mBt_confirmpathpoint.setOnClickListener(this);
@@ -350,7 +355,6 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
         }
 
         //设置当前位置的信息
-        Point centerPoint = mMapview.getCenterPoint();
         setRobotPointInfo();
 
         //如果没有原点，取消设置路径按钮
@@ -396,6 +400,7 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
                 } else if (scale == 1.5) {
 
                     mMapview.setScale(2.0f);
+
                 } else {
                     ToastUtils.makeToast(getActivity(),"已经最大");
                 }
@@ -417,9 +422,7 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
             break;
 
             case R.id.bt_centerpoint:
-
                 mMapview.setCanSetCenterPoint(true);
-                mMapview.setCanSetPath(false);
                 ToastUtils.makeToast(getActivity(),"请在地图上设置原点位置");
                 break;
 
@@ -461,7 +464,6 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
 
                 break;
             case R.id.bt_confirmrobotpoint:
-                mMapview.setCanSetRobotPoint(false);
 
                 try {
                     float x = Float.parseFloat(mEt_robot_x.getText().toString());
@@ -470,7 +472,9 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
                     int v1 = (int) (x * 100 * MapView.mGridWidth / Constant.DISTANCEPERGRID / mActivity.getMapScaleFactor() + mMapview.getCenterPoint().x+0.5f);
                     int v2 = (int) (mMapview.getCenterPoint().y - y * MapView.mGridWidth * 100 / Constant.DISTANCEPERGRID / mActivity.getMapScaleFactor()+0.5f);
 
-                    mMapview.setRobortPointInMap(new Point(v1,v2));
+                    mMapview.setRobotPointInMap(new Point(v1,v2));
+
+                    mMapview.setCanSetRobotPoint(false);
 
                 } catch (NumberFormatException e) {
                     e.printStackTrace();
@@ -520,8 +524,17 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
 
 
 
+
+
                 break;
-            case R.id.bt_confirmpathpoint://开始地图漫游
+            case R.id.bt_stopwalk://开始地图漫游
+
+
+
+
+                break;
+
+            case R.id.bt_confirmpathpoint://确认路径点
 
                 try {
                     float x = Float.parseFloat(mEt_pathpoint_x.getText().toString());
@@ -530,13 +543,15 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
                     int v1 = (int) (x * 100 * MapView.mGridWidth / Constant.DISTANCEPERGRID / mActivity.getMapScaleFactor() + mMapview.getCenterPoint().x+0.5f);
                     int v2 = (int) (mMapview.getCenterPoint().y - y * MapView.mGridWidth * 100 / Constant.DISTANCEPERGRID / mActivity.getMapScaleFactor()+0.5f);
 
-                    mMapview.addPathPoint(mPath,new Point(v1,v2));
+                    mMapview.addPathPoint(mPath,new Point(v1,v2),true,false);
 
                 } catch (NumberFormatException e) {
                     e.printStackTrace();
                 }
 
                 break;
+
+
             default:
                 break;
         }
@@ -570,15 +585,38 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
     }
 
 
+    public void setPathPointInfo(Point pointInView){
+
+
+        if (mEt_pathpoint_x==null||mEt_pathpoint_y==null){
+            return;
+        }
+
+        Point centerPoint = mMapview.getCenterPoint();
+        String x = mFormat.format((pointInView.x - centerPoint.x) / 1.0/MapView.mGridWidth * Constant.DISTANCEPERGRID * mActivity.getMapScaleFactor() / 100);
+        String y = mFormat.format((-pointInView.y + centerPoint.y) / 1.0 /MapView.mGridWidth * Constant.DISTANCEPERGRID * mActivity.getMapScaleFactor() / 100);
+
+        mEt_pathpoint_x.setText(x);
+        mEt_pathpoint_x.setSelection(x.length());
+
+        mEt_pathpoint_y.setText(y);
+        mEt_pathpoint_y.setSelection(y.length());
+
+    }
+
+
     public void setRobotPointInfo() {
 
         if (mEt_robot_x==null||mEt_robot_y==null){
             return;
         }
 
-        Point point = mMapview.getRobortPointInMap();
+        Point point = mMapview.getRobotPointInMap();
         Point centerPoint = mMapview.getCenterPoint();
 
+        if (centerPoint == null){
+            return;
+        }
 //        point.x=(point.x-centerPoint.x)/40.0*10*mActivity.getMapScaleFactor()/100;
 //        point.y=(point.y-centerPoint.y)/40.0*10*mActivity.getMapScaleFactor()/100;
 
@@ -643,7 +681,7 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
             mTv_roll.setText(bean.pose[1] + "°");
             mTv_yaw.setText(bean.pose[2] + "°");
 
-            mTv_pressure.setText(bean.pressure + "Pa");
+            mTv_pressure.setText(bean.pressure + " Pa");
         }
     }
 

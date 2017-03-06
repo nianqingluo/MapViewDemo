@@ -46,6 +46,12 @@ public class SerialPortUtil {
         return spu;
     }
 
+
+    private SerialPortUtil(){
+
+    }
+
+
     /**
      * 不使用,需要close(),释放资源
      * @throws IOException
