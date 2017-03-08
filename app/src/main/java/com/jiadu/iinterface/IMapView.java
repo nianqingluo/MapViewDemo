@@ -19,10 +19,19 @@ public interface IMapView {
 
     public int getCurrentListPosition();
 
-    public void setRobotPointInMap(Point point);
+    /**
+     * @param point:robot在地图的point点
+     *
+     * @param flag:是否需要匹配最近点
+     */
+    public void setRobotPointInMap(Point point,boolean flag);
 
     public Point getRobotPointInMap();
 
     public Point getCenterPoint();
+
+    public Point getNextPoint();
+
+    public Point getStartManYouPoint();
 
 }

@@ -1,5 +1,8 @@
 package com.jiaud.Manager;
 
+import android.graphics.Point;
+
+import com.jiadu.fragment.MapFragment;
 import com.jiadu.service.ServerSocketUtil;
 
 import org.json.JSONException;
@@ -17,17 +20,23 @@ public class Brain {
     private Map<String,String>  stateMap = new HashMap<String,String>();
     public final String MANYOU = "manyou";
     public final String MANYOU_TEMP = "temp";
-    public final String MANYOU_TARGET = "no";
+    public final String MANYOU_TARGET = "target";
     public final String WALK = "walk";//forward back
     public final String WALK_FORWARD = "forward";//forward
     public final String WALK_BACK = "back";//back
     public final String TURN = "turn";//right left
+    public final String TURNING = "turning";//right left
     public final String ZHAOREN = "manyou";
     public final String CAMERA = "3dcamera";
     public final String STOP = "stop";
-
     public final String INTERMEDIATER = "intermediater";
+    public Point RobotPointBeforeWalk = null;
 
+    public void setMapFragment(MapFragment mapFragment) {
+        mMapFragment = mapFragment;
+    }
+
+    public MapFragment mMapFragment =null;
 
     public static Brain instance = null;
 
@@ -63,7 +72,7 @@ public class Brain {
         try {
             JSONObject json = new JSONObject(string);
             String type = (String) json.get("type");
-            
+
             if ("command".equals(type)){//说明处理的是命令
                 handleSendCommand(json);
             }
@@ -88,25 +97,22 @@ public class Brain {
 
         }
         else if (WALK.equals(function)){//是要发送行走命令
-            if (stateMap.get(WALK) != null || stateMap.get(TURN) != null){
-                try {
-                    stopAll();
-                    ServerSocketUtil.sendDateToClient(json.toString());
-                    stateMap.put(WALK,WALK_FORWARD);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+            try {
+                stopAll();
+                ServerSocketUtil.sendDateToClient(json.toString());
+                RobotPointBeforeWalk = mMapFragment.getRobotPointInMap();
+                stateMap.put(WALK,WALK_FORWARD);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
         else if (TURN.equals(function)){//是要发送转弯命令
-            if (stateMap.get(WALK) != null || stateMap.get(TURN) != null){
-                try {
-                    stopAll();
-                    ServerSocketUtil.sendDateToClient(json.toString());
-                    stateMap.put(WALK,TURN);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+            try {
+                stopAll();
+                ServerSocketUtil.sendDateToClient(json.toString());
+                stateMap.put(TURN,TURNING);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
         else if (STOP.equals(function)){//是要发送停止命令

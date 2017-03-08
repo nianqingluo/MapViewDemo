@@ -5,9 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 
-import com.jiadu.mapdemo.util.LogUtil;
-
-import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
@@ -37,30 +34,30 @@ public class MessageBroadcast extends BroadcastReceiver {
             listener.receiveMessage(msg);
         }
 
-        LogUtil.debugLog("广播接收的消息："+msg);
-
-        try {
-            JSONObject jsonObject = new JSONObject(msg);
-
-            String type = (String) jsonObject.get("type");
-            
-            if ("command".equals(type)){//接收到的是命令
-
-               handleCommandMessage(jsonObject);
-
-            }else if ("state".equals(type)){//接收到的是状态
-
-                handleStateMessage(jsonObject);
-
-            }else if ("param".equals(type)){//接收到的是参数
-
-                handleParamMessage(jsonObject);
-
-            }
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+//        LogUtil.debugLog("广播接收的消息："+msg);
+//
+//        try {
+//            JSONObject jsonObject = new JSONObject(msg);
+//
+//            String type = (String) jsonObject.get("type");
+//
+//            if ("command".equals(type)){//接收到的是命令
+//
+//               handleCommandMessage(jsonObject);
+//
+//            }else if ("state".equals(type)){//接收到的是状态
+//
+//                handleStateMessage(jsonObject);
+//
+//            }else if ("param".equals(type)){//接收到的是参数
+//
+//                handleParamMessage(jsonObject);
+//
+//            }
+//
+//        } catch (JSONException e) {
+//            e.printStackTrace();
+//        }
     }
 
     /**

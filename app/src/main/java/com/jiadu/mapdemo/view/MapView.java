@@ -129,14 +129,18 @@ public class MapView extends ImageView {
 
     /**
      * @param point:在map中的点
+     * @param flag:是否需要匹配最近的格子顶点
      */
-    public void setRobotPointInMap(Point point){
+    public void setRobotPointInMap(Point point,boolean flag){
 
         if (point==null){
             return;
         }
-
-        mRobotPoint = matchClosestPoint(point);
+        if (flag){
+            mRobotPoint = matchClosestPoint(point);
+        }else {
+            mRobotPoint = point;
+        }
 
         if (mMapFragment!=null){
             mMapFragment.setRobotPointInfo();
@@ -590,7 +594,7 @@ public class MapView extends ImageView {
         mDbUtil = new MyDataBaseUtil(mContext);
 
         mCenterPoint = mDbUtil.queryCenterPoint(TYPE_CENTERPOINT);
-        setRobotPointInMap(mCenterPoint);
+        setRobotPointInMap(mCenterPoint,true);
 
         if (mCenterPoint == null){
 
@@ -1026,7 +1030,7 @@ public class MapView extends ImageView {
             postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    setRobotPointInMap(mCenterPoint);
+                    setRobotPointInMap(mCenterPoint,true);
                 }
             },200);
 
@@ -1228,9 +1232,8 @@ public class MapView extends ImageView {
     /**
      * @return 返回上一个漫游路径点
      */
-    public Point getCurrentPoint(){
+    public Point getStartManYouPoint(){
         if (mCurrentListPosition == -1){
-
             return mCenterPoint;
         }
 

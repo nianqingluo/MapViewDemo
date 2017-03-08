@@ -85,7 +85,7 @@ public class MainActivity extends AppCompatActivity implements IViewMainActivity
 
         mMbReceive = new MessageBroadcast();
         ReceiveBrain listener = ReceiveBrain.getInstance();
-        listener.setContext(this);
+//        listener.setContext(this);
         mMbReceive.setListener(listener);
 
         IntentFilter filter =  new IntentFilter("com.jdrd.fragment.Map");

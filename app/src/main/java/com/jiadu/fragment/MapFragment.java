@@ -25,11 +25,13 @@ import com.jiadu.impl.MapFragmentPresentImpl;
 import com.jiadu.mapdemo.MainActivity;
 import com.jiadu.mapdemo.R;
 import com.jiadu.mapdemo.util.Constant;
+import com.jiadu.mapdemo.util.LogUtil;
 import com.jiadu.mapdemo.util.SharePreferenceUtils;
 import com.jiadu.mapdemo.util.ToastUtils;
 import com.jiadu.mapdemo.util.TurnAngleUtil;
 import com.jiadu.mapdemo.view.MapView;
 import com.jiaud.Manager.Brain;
+import com.jiaud.Manager.ReceiveBrain;
 
 import java.text.DecimalFormat;
 import java.util.Timer;
@@ -239,6 +241,10 @@ public class MapFragment extends Fragment implements View.OnClickListener, IMapV
             default:
             break;
         }
+
+        ReceiveBrain.getInstance().setContext(mActivity);
+
+        mBrain.setMapFragment(this);
 
     }
 
@@ -506,7 +512,7 @@ public class MapFragment extends Fragment implements View.OnClickListener, IMapV
                     int v1 = (int) (x * 100 * MapView.mGridWidth / Constant.DISTANCEPERGRID / mActivity.getMapScaleFactor() + mMapview.getCenterPoint().x+0.5f);
                     int v2 = (int) (mMapview.getCenterPoint().y - y * MapView.mGridWidth * 100 / Constant.DISTANCEPERGRID / mActivity.getMapScaleFactor()+0.5f);
 
-                    mMapview.setRobotPointInMap(new Point(v1,v2));
+                    mMapview.setRobotPointInMap(new Point(v1,v2),true);
 
                     mMapview.setCanSetRobotPoint(false);
 
@@ -556,15 +562,16 @@ public class MapFragment extends Fragment implements View.OnClickListener, IMapV
                 break;
             case R.id.bt_startwalk://开始地图漫游
 
-                Point currentPoint = mMapview.getCurrentPoint();
+                Point currentPoint = mMapview.getRobotPointInMap();
                 Point nextPoint = mMapview.getNextPoint(1);
                 startManYou(currentPoint,nextPoint);
                 
                 break;
             case R.id.bt_stopwalk://停止地图漫游
 
+                mBrain.setStateMapValue(mBrain.MANYOU,null);
 
-
+                mBrain.sendCommand("{'type':'command','function':'stop','data':''}");
 
                 break;
 
@@ -592,10 +599,13 @@ public class MapFragment extends Fragment implements View.OnClickListener, IMapV
 
     }
 
-    private void startManYou(Point currentPoint, Point nextPoint) {
+    public void startManYou(Point currentPoint, Point nextPoint) {
+
+        System.out.println("currentPoint:"+currentPoint+" ;nextPoint:"+nextPoint);
 
         //说明不需要增加一个中间点
-        if (currentPoint.x == nextPoint.x ){//x坐标重合
+        if (Math.abs(currentPoint.x - nextPoint.x) < 0.2 ){//x坐标重合
+            LogUtil.debugLog("x坐标重合");
             if (currentPoint.y>nextPoint.y){//往上走
                 setNextDirection(0);
                 setDirection(0);
@@ -625,7 +635,8 @@ public class MapFragment extends Fragment implements View.OnClickListener, IMapV
                 }
             }
         }
-        else if (currentPoint.y == currentPoint .y){//说明不需要增加一个中间点,y坐标重合
+        else if (Math.abs(currentPoint.y - nextPoint .y) < 0.2){//说明不需要增加一个中间点,y坐标重合
+            LogUtil.debugLog("y坐标重合");
             if (currentPoint.x > nextPoint.x){//往左走
                 setNextDirection(270);
                 setDirection(2);
@@ -641,7 +652,7 @@ public class MapFragment extends Fragment implements View.OnClickListener, IMapV
             }
             else if (currentPoint.x < nextPoint.x){//往右走
 
-                setNextDirection(270);
+                setNextDirection(90);
                 setDirection(3);
                 if (Math.abs(nextDirection-currentAngle)>5){//夹角大于5°，先转正再前进
                     mBrain.setStateMapValue(mBrain.MANYOU,mBrain.MANYOU_TARGET);
@@ -656,6 +667,7 @@ public class MapFragment extends Fragment implements View.OnClickListener, IMapV
         }
         else { // 需要中间点
 
+            LogUtil.debugLog("需要中间点");
             tempIntermediate = new Point(nextPoint.x, currentPoint.y);
 
             if (currentPoint.x > nextPoint.x) {//往左走
@@ -670,8 +682,9 @@ public class MapFragment extends Fragment implements View.OnClickListener, IMapV
                     mBrain.sendCommand("{'type':'command','function':'walk','data':{'distance':" + pxTrandferToDistance(Math.abs(currentPoint.x - nextPoint.x)) + "}}");
                 }
             } else if (currentPoint.x < nextPoint.x) {//往右走
+                LogUtil.debugLog("方向：往右走");
 
-                setNextDirection(270);
+                setNextDirection(90);
                 setDirection(3);
                 if (Math.abs(nextDirection - currentAngle) > 5) {//夹角大于5°，先转正再前进
                     mBrain.setStateMapValue(mBrain.MANYOU, mBrain.MANYOU_TEMP);
@@ -843,8 +856,8 @@ public class MapFragment extends Fragment implements View.OnClickListener, IMapV
     }
 
     @Override
-    public void setRobotPointInMap(Point point) {
-        mMapview.setRobotPointInMap(point);
+    public void setRobotPointInMap(Point point,boolean flag) {
+        mMapview.setRobotPointInMap(point,flag);
     }
 
     @Override
@@ -855,6 +868,16 @@ public class MapFragment extends Fragment implements View.OnClickListener, IMapV
     @Override
     public Point getCenterPoint() {
         return mMapview.getCenterPoint();
+    }
+
+    @Override
+    public Point getNextPoint() {
+        return mMapview.getNextPoint(0);
+    }
+
+    @Override
+    public Point getStartManYouPoint() {
+        return mMapview.getStartManYouPoint();
     }
 
 }
