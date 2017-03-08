@@ -1,8 +1,8 @@
 package com.jiadu.impl;
 
 import com.jiadu.bean.IMUDataBean;
-import com.jiadu.iinterface.IPresent;
-import com.jiadu.iinterface.IView;
+import com.jiadu.iinterface.IMapFragmentPresent;
+import com.jiadu.iinterface.IMapView;
 import com.jiadu.mapdemo.util.SerialPortUtil;
 
 import java.io.IOException;
@@ -10,13 +10,13 @@ import java.io.IOException;
 /**
  * Created by Administrator on 2017/2/21.
  */
-public class MapFragmentPresentImpl implements IPresent {
+public class MapFragmentPresentImpl implements IMapFragmentPresent {
 
-    private IView mIView;
+    private IMapView mIMapView;
     private SerialPortUtil spu;
 
-    public MapFragmentPresentImpl(IView iView) {
-        mIView = iView;
+    public MapFragmentPresentImpl(IMapView iMapView) {
+        mIMapView = iMapView;
         spu = SerialPortUtil.getInstance();
     }
 

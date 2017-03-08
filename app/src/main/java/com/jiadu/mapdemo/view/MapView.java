@@ -20,6 +20,7 @@ import com.jiadu.mapdemo.R;
 import com.jiadu.mapdemo.util.ArrowUtil;
 import com.jiadu.mapdemo.util.Constant;
 import com.jiadu.mapdemo.util.MyDataBaseUtil;
+import com.jiadu.mapdemo.util.ToastUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -86,7 +87,7 @@ public class MapView extends ImageView {
     private Point tempPoint = null;
 
     private int mCurrentPath=1; //当前漫游的路径
-    private int mCurrentListPosition=0;//当前漫游路劲中的点
+    private int mCurrentListPosition=-1;//当前漫游路劲中的点
     private boolean hasFinishLoop = false;//表示漫游1圈是否完成回到原点
 
     private Point intermediatePoint1 = null;
@@ -94,11 +95,22 @@ public class MapView extends ImageView {
     private Point intermediatePoint3 = null;
 
 
-    public void setCurrentPointPosition(int currentPointPosition) {
-        this.mCurrentPath = currentPointPosition;
+    public int getCurrentListPosition() {
+        return mCurrentListPosition;
+    }
+    public void setCurrentListPosition(int currentListPosition) {
+
+        if (currentListPosition >= pathListAfterTransfer1.size()){
+
+            this.mCurrentListPosition = -1;
+        }else {
+
+            this.mCurrentListPosition = currentListPosition;
+        }
     }
     public void setCurrentPath(int currentPath) {
-        this.mCurrentListPosition = currentPath;
+
+        this.mCurrentPath = currentPath;
     }
 
 
@@ -194,9 +206,7 @@ public class MapView extends ImageView {
 
             Point pointOnMap = pointx;
         if (flag2){
-
             pointOnMap = transferCoordinateToMap(pointx);
-
         }
 
 
@@ -1197,67 +1207,33 @@ public class MapView extends ImageView {
      * @param walkModel:运动模式
      * @return 返回下一个目标点的Point
      */
-    public Point getPoint(int walkModel){
+    public Point getNextPoint(int walkModel){
 
-        jumPtoNextPoint(walkModel);
+        if ( pathListAfterTransfer1==null || pathListAfterTransfer1.size() == 0){//说明此路径没有设置
 
-        switch (mCurrentPath){
-            case 1:
-                if (mCurrentListPosition >= pathListAfterTransfer1.size()){
+            ToastUtils.makeToast(mContext,"请设置路径点");
 
-                    return null;
-                }else {
-                    return pathListAfterTransfer1.get(mCurrentListPosition);
-                }
+            return null;
+        }else {
+            if (mCurrentListPosition+1 >= pathListAfterTransfer1.size()){//说明要回原点了
+                return mCenterPoint;
+            }
+            else {
 
-            case 2:
-                if (mCurrentListPosition >= pathListAfterTransfer2.size()){
-                    return null;
-                }else {
-                    return pathListAfterTransfer2.get(mCurrentListPosition);
-                }
-
-            case 3:
-
-                if (mCurrentListPosition >= pathListAfterTransfer3.size()){
-                    return null;
-                }else {
-                    return pathListAfterTransfer3.get(mCurrentListPosition);
-                }
-
-            default:
-            break;
+                return pathListAfterTransfer1.get(mCurrentListPosition+1);
+            }
         }
-        return null;
     }
 
+    /**
+     * @return 返回上一个漫游路径点
+     */
+    public Point getCurrentPoint(){
+        if (mCurrentListPosition == -1){
 
-
-
-
-    private void jumPtoNextPoint(int walkModel) {
-
-        if (hasFinishLoop){
-
-            switch (walkModel){
-                case 1:
-                    mCurrentPath = 1;
-                    mCurrentListPosition =0;
-                break;
-                case 2:
-                    mCurrentPath=((mCurrentPath+1)%3==0?3:(mCurrentPath+1)%3);
-                    mCurrentListPosition =0;
-                break;
-                case 3:
-                    mCurrentPath = mRandom.nextInt(2)+1;
-                    mCurrentListPosition =0;
-                break;
-                default:
-                break;
-            }
-
-        }else {
-
+            return mCenterPoint;
         }
+
+        return pathListAfterTransfer1.get(mCurrentListPosition);
     }
 }

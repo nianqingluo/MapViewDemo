@@ -19,15 +19,17 @@ import android.widget.TextView;
 import com.jiadu.bean.IMUDataBean;
 import com.jiadu.dialog.ChoicePathDialog;
 import com.jiadu.dialog.ChoiceScaleDialog;
-import com.jiadu.iinterface.IPresent;
-import com.jiadu.iinterface.IView;
+import com.jiadu.iinterface.IMapFragmentPresent;
+import com.jiadu.iinterface.IMapView;
 import com.jiadu.impl.MapFragmentPresentImpl;
 import com.jiadu.mapdemo.MainActivity;
 import com.jiadu.mapdemo.R;
 import com.jiadu.mapdemo.util.Constant;
 import com.jiadu.mapdemo.util.SharePreferenceUtils;
 import com.jiadu.mapdemo.util.ToastUtils;
+import com.jiadu.mapdemo.util.TurnAngleUtil;
 import com.jiadu.mapdemo.view.MapView;
+import com.jiaud.Manager.Brain;
 
 import java.text.DecimalFormat;
 import java.util.Timer;
@@ -36,7 +38,7 @@ import java.util.TimerTask;
 /**
  * Created by Administrator on 2017/2/23.
  */
-public class MapFragment extends Fragment implements View.OnClickListener, IView {
+public class MapFragment extends Fragment implements View.OnClickListener, IMapView {
 
     public static final String WALKMODEL = "walkmodel";
     private final int UPDATETV = 1;//用于handler
@@ -47,6 +49,8 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
     private Button mBt_setpath;
     private boolean isSetPath;
     private boolean hasShowScaleInfo = false;
+
+    private Brain mBrain = Brain.getInstance();
 
     /**
      * 0代表当前线路循环
@@ -80,10 +84,11 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
     private TextView mTv_roll;
     private TextView mTv_yaw;
     private TextView mTv_pressure;
-    private IPresent mIPresent ;
+    private IMapFragmentPresent mIMapFragmentPresent;
     private Timer mTimer;
     private View mRootView;
 
+    public float currentAngle = 0;
     private Button mBt_setrobotpoint;
     public TextView mTv_scale;
 
@@ -102,6 +107,8 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
                     }else {
 
                         IMUDataBean bean = (IMUDataBean) msg.obj;
+
+                        currentAngle = bean.pose[2];
 
                         updata13TV(bean);
 
@@ -136,6 +143,33 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
     private Button mBt_confirmpathpoint;
     private Button mBt_startwalk;
     private Button mBt_stopwalk;
+
+    public Point tempIntermediate = null;
+
+
+    /**
+     * 0:代表上
+     * 1:代表下
+     * 2:代表左
+     * 3:代表右
+     */
+    private int direction = 0;
+
+
+    public int getDirection() {
+        return direction;
+    }
+
+    public void setDirection(int direction) {
+        this.direction = direction;
+    }
+
+    public float nextDirection = 0;//旋转之后的角度
+    public void setNextDirection(float nextDirection) {
+        this.nextDirection = nextDirection;
+    }
+
+
 
 
     public void setPath(int path) {
@@ -185,7 +219,7 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
     }
 
     private void initData() {
-        mIPresent = new MapFragmentPresentImpl(this);
+        mIMapFragmentPresent = new MapFragmentPresentImpl(this);
 
         walkModel=SharePreferenceUtils.getInt(mActivity, WALKMODEL);
 
@@ -364,7 +398,7 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
 
         //获取陀螺仪的数据
         try {
-            mIPresent.openIMUSerialPort();
+            mIMapFragmentPresent.openIMUSerialPort();
         } catch (Exception e) {
             e.printStackTrace();
             return;
@@ -375,7 +409,7 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
         TimerTask task = new TimerTask() {
             @Override
             public void run() {
-                IMUDataBean imuDataBean = mIPresent.getIMUDataBean();
+                IMUDataBean imuDataBean = mIMapFragmentPresent.getIMUDataBean();
 
                 Message msg = Message.obtain(mHandler,UPDATETV);
 
@@ -522,12 +556,12 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
                 break;
             case R.id.bt_startwalk://开始地图漫游
 
-
-
-
-
+                Point currentPoint = mMapview.getCurrentPoint();
+                Point nextPoint = mMapview.getNextPoint(1);
+                startManYou(currentPoint,nextPoint);
+                
                 break;
-            case R.id.bt_stopwalk://开始地图漫游
+            case R.id.bt_stopwalk://停止地图漫游
 
 
 
@@ -558,6 +592,99 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
 
     }
 
+    private void startManYou(Point currentPoint, Point nextPoint) {
+
+        //说明不需要增加一个中间点
+        if (currentPoint.x == nextPoint.x ){//x坐标重合
+            if (currentPoint.y>nextPoint.y){//往上走
+                setNextDirection(0);
+                setDirection(0);
+
+                if (Math.abs(nextDirection-currentAngle)>5){//夹角大于5°，先转正再前进
+                    mBrain.setStateMapValue(mBrain.MANYOU,mBrain.MANYOU_TARGET);
+                    float transferAngle = TurnAngleUtil.getTransferAngle(nextDirection - currentAngle);
+                    mBrain.sendCommand("{'type':'command','function':'turn','data':{'degree':"+transferAngle+"}}");
+                }
+                else {//夹角小于5°，直接前进
+                    mBrain.setStateMapValue(mBrain.MANYOU,mBrain.MANYOU_TARGET);
+                    mBrain.sendCommand("{'type':'command','function':'walk','data':{'distance':"+pxTrandferToDistance(Math.abs(currentPoint.y-nextPoint.y))+"}}");
+                }
+            }
+            else if (currentPoint.y < nextPoint.y){//往下走
+                setNextDirection(180);
+                setDirection(1);
+
+                if (Math.abs(nextDirection-currentAngle)>5){//夹角大于5°，先转正再前进
+                    mBrain.setStateMapValue(mBrain.MANYOU,mBrain.MANYOU_TARGET);
+                    float transferAngle = TurnAngleUtil.getTransferAngle(nextDirection - currentAngle);
+                    mBrain.sendCommand("{'type':'command','function':'turn','data':{'degree':"+transferAngle+"}}");
+                }
+                else {//夹角小于5°，直接前进
+                    mBrain.setStateMapValue(mBrain.MANYOU,mBrain.MANYOU_TARGET);
+                    mBrain.sendCommand("{'type':'command','function':'walk','data':{'distance':"+pxTrandferToDistance(Math.abs(currentPoint.y-nextPoint.y))+"}}");
+                }
+            }
+        }
+        else if (currentPoint.y == currentPoint .y){//说明不需要增加一个中间点,y坐标重合
+            if (currentPoint.x > nextPoint.x){//往左走
+                setNextDirection(270);
+                setDirection(2);
+                if (Math.abs(nextDirection-currentAngle)>5){//夹角大于5°，先转正再前进
+                    mBrain.setStateMapValue(mBrain.MANYOU,mBrain.MANYOU_TARGET);
+                    float transferAngle = TurnAngleUtil.getTransferAngle(nextDirection - currentAngle);
+                    mBrain.sendCommand("{'type':'command','function':'turn','data':{'degree':"+transferAngle+"}}");
+                }
+                else {//夹角小于5°，直接前进
+                    mBrain.setStateMapValue(mBrain.MANYOU,mBrain.MANYOU_TARGET);
+                    mBrain.sendCommand("{'type':'command','function':'walk','data':{'distance':"+pxTrandferToDistance(Math.abs(currentPoint.x-nextPoint.x))+"}}");
+                }
+            }
+            else if (currentPoint.x < nextPoint.x){//往右走
+
+                setNextDirection(270);
+                setDirection(3);
+                if (Math.abs(nextDirection-currentAngle)>5){//夹角大于5°，先转正再前进
+                    mBrain.setStateMapValue(mBrain.MANYOU,mBrain.MANYOU_TARGET);
+                    float transferAngle = TurnAngleUtil.getTransferAngle(nextDirection - currentAngle);
+                    mBrain.sendCommand("{'type':'command','function':'turn','data':{'degree':"+transferAngle+"}}");
+                }
+                else {//夹角小于5°，直接前进
+                    mBrain.setStateMapValue(mBrain.MANYOU,mBrain.MANYOU_TARGET);
+                    mBrain.sendCommand("{'type':'command','function':'walk','data':{'distance':"+pxTrandferToDistance(Math.abs(currentPoint.x-nextPoint.x))+"}}");
+                }
+            }
+        }
+        else { // 需要中间点
+
+            tempIntermediate = new Point(nextPoint.x, currentPoint.y);
+
+            if (currentPoint.x > nextPoint.x) {//往左走
+                setNextDirection(270);
+                setDirection(2);
+                if (Math.abs(nextDirection - currentAngle) > 5) {//夹角大于5°，先转正再前进
+                    mBrain.setStateMapValue(mBrain.MANYOU, mBrain.MANYOU_TEMP);
+                    float transferAngle = TurnAngleUtil.getTransferAngle(nextDirection - currentAngle);
+                    mBrain.sendCommand("{'type':'command','function':'turn','data':{'degree':" + transferAngle + "}}");
+                } else {//夹角小于5°，直接前进
+                    mBrain.setStateMapValue(mBrain.MANYOU, mBrain.MANYOU_TEMP);
+                    mBrain.sendCommand("{'type':'command','function':'walk','data':{'distance':" + pxTrandferToDistance(Math.abs(currentPoint.x - nextPoint.x)) + "}}");
+                }
+            } else if (currentPoint.x < nextPoint.x) {//往右走
+
+                setNextDirection(270);
+                setDirection(3);
+                if (Math.abs(nextDirection - currentAngle) > 5) {//夹角大于5°，先转正再前进
+                    mBrain.setStateMapValue(mBrain.MANYOU, mBrain.MANYOU_TEMP);
+                    float transferAngle = TurnAngleUtil.getTransferAngle(nextDirection - currentAngle);
+                    mBrain.sendCommand("{'type':'command','function':'turn','data':{'degree':" + transferAngle + "}}");
+                } else {//夹角小于5°，直接前进
+                    mBrain.setStateMapValue(mBrain.MANYOU, mBrain.MANYOU_TEMP);
+                    mBrain.sendCommand("{'type':'command','function':'walk','data':{'distance':" + pxTrandferToDistance(Math.abs(currentPoint.x - nextPoint.x)) + "}}");
+                }
+            }
+        }
+    }
+
     public void isSetRobotPoint(boolean flag){
 
         if (flag){
@@ -576,7 +703,7 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
 
     @Override
     public void onPause() {
-        mIPresent.closeIMUSerialPort();
+        mIMapFragmentPresent.closeIMUSerialPort();
         if (mTimer!=null){
             mTimer.cancel();
             mTimer=null;
@@ -640,6 +767,11 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
 
     }
 
+    public float pxTrandferToDistance(float px){
+
+        return px/MapView.mGridWidth*0.1f*mActivity.getMapScaleFactor();
+    }
+
     @Override
     public void updata13TV(IMUDataBean bean) {
 
@@ -699,4 +831,30 @@ public class MapFragment extends Fragment implements View.OnClickListener, IView
         DialogFragment choiceScale = new ChoiceScaleDialog();
         choiceScale.show(getActivity().getFragmentManager(),"choicescale");
     }
+
+    @Override
+    public void setCurrentListPosition(int position) {
+        mMapview.setCurrentListPosition(position);
+    }
+
+    @Override
+    public int getCurrentListPosition() {
+        return mMapview.getCurrentListPosition();
+    }
+
+    @Override
+    public void setRobotPointInMap(Point point) {
+        mMapview.setRobotPointInMap(point);
+    }
+
+    @Override
+    public Point getRobotPointInMap() {
+        return mMapview.getRobotPointInMap();
+    }
+
+    @Override
+    public Point getCenterPoint() {
+        return mMapview.getCenterPoint();
+    }
+
 }

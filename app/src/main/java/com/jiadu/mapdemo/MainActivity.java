@@ -21,6 +21,7 @@ import com.jiadu.iinterface.IViewMainActivity;
 import com.jiadu.mapdemo.util.LogUtil;
 import com.jiadu.mapdemo.util.SharePreferenceUtils;
 import com.jiadu.service.ServerSocketUtil;
+import com.jiaud.Manager.ReceiveBrain;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -83,6 +84,10 @@ public class MainActivity extends AppCompatActivity implements IViewMainActivity
     private void registerSocketReceiver() {
 
         mMbReceive = new MessageBroadcast();
+        ReceiveBrain listener = ReceiveBrain.getInstance();
+        listener.setContext(this);
+        mMbReceive.setListener(listener);
+
         IntentFilter filter =  new IntentFilter("com.jdrd.fragment.Map");
 
         registerReceiver(mMbReceive,filter);

@@ -15,6 +15,16 @@ import org.json.JSONObject;
  */
 public class MessageBroadcast extends BroadcastReceiver {
 
+    public void setListener(MessageListener listener) {
+
+        if (listener==null){
+            return;
+        }
+
+        this.listener = listener;
+    }
+
+    private MessageListener listener=null;
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -22,6 +32,10 @@ public class MessageBroadcast extends BroadcastReceiver {
         Bundle bundle = intent.getExtras();
 
         String msg = bundle.getString("msg");
+
+        if (listener!=null){
+            listener.receiveMessage(msg);
+        }
 
         LogUtil.debugLog("广播接收的消息："+msg);
 
@@ -70,6 +84,12 @@ public class MessageBroadcast extends BroadcastReceiver {
      * @param jsonObject:json数据
      */
     private void handleCommandMessage(JSONObject jsonObject) {
+
+    }
+
+    public interface MessageListener{
+
+        public void receiveMessage(String message);
 
     }
 }
