@@ -40,7 +40,7 @@ public class MapView extends ImageView {
 
     private int mViewWidth ;
     private int mViewHeight ;
-    public static int mGridWidth = 40;
+    public static int mGridWidth = 70;
     private Bitmap mGridBitmap;
     private Paint mPaint;
     private Paint mPathPaint;
@@ -1047,8 +1047,8 @@ public class MapView extends ImageView {
      * @return 返回view位置对应于map中的点
      */
     private Point transferCoordinateToMap(Point point) {
-        int x = (int) ((mViewWidth/2*mScale-(mViewWidth/2-point.x+mTranslateX))/mScale);
-        int y = (int) ((mViewHeight/2*mScale-(mViewHeight/2-point.y+mTranslateY))/mScale);
+        int x = (int) ((mViewWidth/2.0*mScale-(mViewWidth/2.0-point.x+mTranslateX))/mScale);
+        int y = (int) ((mViewHeight/2.0*mScale-(mViewHeight/2.0-point.y+mTranslateY))/mScale);
         return new Point(x,y);
     }
 
@@ -1129,7 +1129,7 @@ public class MapView extends ImageView {
                 else if(isCanSetPath()){//说明是要设置路径
 
                     tempPoint =matchClosestPoint(transferCoordinateToMap(new Point((int)x,(int)y)));
-                    mMapFragment.setPathPointInfo(transferCoordinateToMap(tempPoint));
+                    mMapFragment.setPathPointInfo(tempPoint);
 
                     invalidate();
                     return true;
@@ -1158,7 +1158,7 @@ public class MapView extends ImageView {
                 }
                 else if (isCanSetPath()){//说明是要设置路径
                     tempPoint =matchClosestPoint(transferCoordinateToMap(new Point((int)x,(int)y)));
-                    mMapFragment.setPathPointInfo(transferCoordinateToMap(tempPoint));
+                    mMapFragment.setPathPointInfo(tempPoint);
                     invalidate();
                     return true;
                 }
@@ -1189,7 +1189,7 @@ public class MapView extends ImageView {
                 }
                 else if (isCanSetPath()){//说明是要设置路径
                     tempPoint =matchClosestPoint(transferCoordinateToMap(new Point((int)x,(int)y)));
-                    mMapFragment.setPathPointInfo(transferCoordinateToMap(tempPoint));
+                    mMapFragment.setPathPointInfo(tempPoint);
                     addPathPoint(mPathNum,tempPoint,true,false);
                     tempPoint = null;
                 }

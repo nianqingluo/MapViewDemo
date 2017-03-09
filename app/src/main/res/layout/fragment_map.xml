@@ -8,12 +8,12 @@
         android:layout_width="0dp"
         android:layout_weight="1"
         android:layout_height="match_parent"
-        android:padding="25px"
+        android:gravity="center_horizontal|center_vertical"
         >
 
         <com.jiadu.mapdemo.view.MapView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_width="1400px"
+            android:layout_height="700px"
             android:background="#afb6bc"
             android:id="@+id/mv_mapview"
             />

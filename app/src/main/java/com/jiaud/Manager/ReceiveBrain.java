@@ -6,6 +6,7 @@ import android.os.SystemClock;
 import com.jiadu.broadcast.MessageBroadcast;
 import com.jiadu.fragment.MapFragment;
 import com.jiadu.mapdemo.MainActivity;
+import com.jiadu.mapdemo.util.Constant;
 import com.jiadu.mapdemo.util.LogUtil;
 import com.jiadu.mapdemo.util.ToastUtils;
 import com.jiadu.mapdemo.util.TurnAngleUtil;
@@ -13,6 +14,8 @@ import com.jiadu.mapdemo.view.MapView;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.Timer;
 
 /**
  * Created by Administrator on 2017/3/7.
@@ -24,6 +27,8 @@ public class ReceiveBrain implements MessageBroadcast.MessageListener{
     private MainActivity mContext;
 
     MapFragment mMapFragment = null;
+
+    public Timer mTimer= new Timer();
 
 
     public void setContext(MainActivity context) {
@@ -104,6 +109,7 @@ public class ReceiveBrain implements MessageBroadcast.MessageListener{
                         }
                         changeRobotPoint(dis);
                         ToastUtils.makeToast(mContext,"到达了第"+(mMapFragment.getCurrentListPosition()+1)+"个漫游点");
+
                         // TODO: 2017/3/8 漫游达到一个点完成后需要添加的逻辑
                         mMapFragment.startManYou(mMapFragment.getRobotPointInMap(),mMapFragment.getNextPoint());
 
@@ -137,12 +143,15 @@ public class ReceiveBrain implements MessageBroadcast.MessageListener{
                 JSONObject data = (JSONObject) jsonObject.get("data");
                 if ("success".equals(data.get("result"))){//旋转指定的角度已经完成
                     mBrain.setStateMapValue(mBrain.TURN,null);
+
+                    
+
                     new Thread(){
                         @Override
                         public void run() {
                             SystemClock.sleep(2000);//转弯成功，停留两秒等待陀螺仪数据平稳
 
-                            if (Math.abs(mMapFragment.nextDirection - mMapFragment.currentAngle)<5){//说明转弯角度OK
+                            if (Math.abs(mMapFragment.nextDirection - mMapFragment.currentAngle) < Constant.TOLERANCEANGLE){//说明转弯角度OK
 
                                 if (mBrain.getStateMapValue(mBrain.MANYOU) != null){ // 说明是在漫游状态下完成转弯
 
@@ -156,7 +165,7 @@ public class ReceiveBrain implements MessageBroadcast.MessageListener{
                                 }
                             }
                             else {//说明转弯角度不精确
-                                float v = mMapFragment.nextDirection - mMapFragment.currentAngle;
+                                float v = mMapFragment.currentAngle - mMapFragment.nextDirection;
 
                                 float transferAngle = TurnAngleUtil.getTransferAngle(v);
 
