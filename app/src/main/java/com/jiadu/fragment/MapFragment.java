@@ -156,6 +156,7 @@ public class MapFragment extends Fragment implements View.OnClickListener, IMapV
      * 3:代表右
      */
     private int direction = 0;
+    private Button mBt_back;
 
 
     public int getDirection() {
@@ -306,6 +307,8 @@ public class MapFragment extends Fragment implements View.OnClickListener, IMapV
 
         mBt_stopwalk = (Button) findViewById(R.id.bt_stopwalk);
 
+        mBt_back = (Button) findViewById(R.id.bt_back);
+
         mRg_walkmodel.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
@@ -326,6 +329,7 @@ public class MapFragment extends Fragment implements View.OnClickListener, IMapV
             }
         });
 
+        mBt_back.setOnClickListener(this);
         mBt_stopwalk.setOnClickListener(this);
         mBt_startwalk.setOnClickListener(this);
 
@@ -532,7 +536,6 @@ public class MapFragment extends Fragment implements View.OnClickListener, IMapV
 
                 }
 
-
                 operateShowing=!operateShowing;
 
                 break;
@@ -571,7 +574,24 @@ public class MapFragment extends Fragment implements View.OnClickListener, IMapV
 
                 mBrain.setStateMapValue(mBrain.MANYOU,null);
 
+                mBrain.setStateMapValue(mBrain.CAMERA,null);
+
+                if(ReceiveBrain.getInstance().mTimer != null){
+
+                    ReceiveBrain.getInstance().mTimer.cancel();
+
+                    ReceiveBrain.getInstance().mTimer = null;
+                }
+
                 mBrain.sendCommand("{'type':'command','function':'stop','data':''}");
+
+                break;
+            case R.id.bt_back://停止地图漫游
+
+                mBrain.setStateMapValue(mBrain.CAMERA,null);
+                mBrain.setStateMapValue(mBrain.MANYOU,null);
+
+                gotoPoint(getCenterPoint());
 
                 break;
 
@@ -591,12 +611,9 @@ public class MapFragment extends Fragment implements View.OnClickListener, IMapV
                 }
 
                 break;
-
-
             default:
                 break;
         }
-
     }
 
     public void startManYou(Point currentPoint, Point nextPoint) {
@@ -610,7 +627,7 @@ public class MapFragment extends Fragment implements View.OnClickListener, IMapV
                 setNextDirection(0);
                 setDirection(0);
 
-                if (Math.abs(nextDirection-currentAngle) > Constant.TOLERANCEANGLE){//夹角大于允许范围，先转正再前进
+                if (!TurnAngleUtil.isInTolerance(currentAngle,nextDirection)){//夹角大于允许范围，先转正再前进
                     mBrain.setStateMapValue(mBrain.MANYOU,mBrain.MANYOU_TARGET);
                     float transferAngle = TurnAngleUtil.getTransferAngle(currentAngle-nextDirection);
                     mBrain.sendCommand("{'type':'command','function':'turn','data':{'degree':"+transferAngle+"}}");
@@ -624,7 +641,7 @@ public class MapFragment extends Fragment implements View.OnClickListener, IMapV
                 setNextDirection(180);
                 setDirection(1);
 
-                if (Math.abs(nextDirection-currentAngle) > Constant.TOLERANCEANGLE ){//夹角大于允许范围，先转正再前进
+                if (!TurnAngleUtil.isInTolerance(currentAngle,nextDirection)){//夹角大于允许范围，先转正再前进
                     mBrain.setStateMapValue(mBrain.MANYOU,mBrain.MANYOU_TARGET);
                     float transferAngle = TurnAngleUtil.getTransferAngle(currentAngle-nextDirection);
                     mBrain.sendCommand("{'type':'command','function':'turn','data':{'degree':"+transferAngle+"}}");
@@ -640,7 +657,7 @@ public class MapFragment extends Fragment implements View.OnClickListener, IMapV
             if (currentPoint.x > nextPoint.x){//往左走
                 setNextDirection(270);
                 setDirection(2);
-                if (Math.abs(nextDirection-currentAngle) > Constant.TOLERANCEANGLE ){//夹角大于允许范围，先转正再前进
+                if (!TurnAngleUtil.isInTolerance(currentAngle,nextDirection)){//夹角大于允许范围，先转正再前进
                     mBrain.setStateMapValue(mBrain.MANYOU,mBrain.MANYOU_TARGET);
                     float transferAngle = TurnAngleUtil.getTransferAngle(currentAngle-nextDirection);
                     mBrain.sendCommand("{'type':'command','function':'turn','data':{'degree':"+transferAngle+"}}");
@@ -654,7 +671,7 @@ public class MapFragment extends Fragment implements View.OnClickListener, IMapV
 
                 setNextDirection(90);
                 setDirection(3);
-                if (Math.abs(nextDirection-currentAngle) > Constant.TOLERANCEANGLE ){//夹角大于5°，先转正再前进
+                if (!TurnAngleUtil.isInTolerance(currentAngle,nextDirection)){//夹角大于5°，先转正再前进
                     mBrain.setStateMapValue(mBrain.MANYOU,mBrain.MANYOU_TARGET);
                     float transferAngle = TurnAngleUtil.getTransferAngle(currentAngle-nextDirection);
                     mBrain.sendCommand("{'type':'command','function':'turn','data':{'degree':"+transferAngle+"}}");
@@ -673,7 +690,7 @@ public class MapFragment extends Fragment implements View.OnClickListener, IMapV
             if (currentPoint.x > nextPoint.x) {//往左走
                 setNextDirection(270);
                 setDirection(2);
-                if (Math.abs(nextDirection - currentAngle) > Constant.TOLERANCEANGLE) {//夹角大于允许范围，先转正再前进
+                if (!TurnAngleUtil.isInTolerance(currentAngle,nextDirection)) {//夹角大于允许范围，先转正再前进
                     mBrain.setStateMapValue(mBrain.MANYOU, mBrain.MANYOU_TEMP);
                     float transferAngle = TurnAngleUtil.getTransferAngle(currentAngle-nextDirection);
                     mBrain.sendCommand("{'type':'command','function':'turn','data':{'degree':" + transferAngle + "}}");
@@ -686,7 +703,7 @@ public class MapFragment extends Fragment implements View.OnClickListener, IMapV
 
                 setNextDirection(90);
                 setDirection(3);
-                if (Math.abs(nextDirection - currentAngle) > Constant.TOLERANCEANGLE) {//夹角大于允许范围，先转正再前进
+                if (!TurnAngleUtil.isInTolerance(currentAngle,nextDirection)) {//夹角大于允许范围，先转正再前进
                     mBrain.setStateMapValue(mBrain.MANYOU, mBrain.MANYOU_TEMP);
                     float transferAngle = TurnAngleUtil.getTransferAngle(currentAngle-nextDirection);
                     mBrain.sendCommand("{'type':'command','function':'turn','data':{'degree':" + transferAngle + "}}");
@@ -696,6 +713,53 @@ public class MapFragment extends Fragment implements View.OnClickListener, IMapV
                 }
             }
         }
+    }
+
+
+    /**
+     * 从当前点直线距离的行走到目标点
+     * @param point：目标点
+     * @return 如果目标点和当前点重合，放回false，如果不重合返回true；
+     */
+    public boolean gotoPoint(Point point){
+        
+        if (point.equals(mMapview.getRobotPointInMap())){
+            return false;
+        }
+
+        Point tempPoint = new Point(point.x-mMapview.getRobotPointInMap().x,-(point.y-mMapview.getRobotPointInMap().y));
+
+        float angle = 0;
+
+        if (tempPoint.x>0){
+            angle = (float) (Math.acos(tempPoint.y /(Math.sqrt(tempPoint.x*tempPoint.x + tempPoint.y*tempPoint.y)))*180/Math.PI);
+        }
+        else if (tempPoint.x<0){
+            angle =360 - (float) (Math.acos(tempPoint.y /(Math.sqrt(tempPoint.x*tempPoint.x + tempPoint.y*tempPoint.y)))*180/Math.PI);
+        }
+        else if (tempPoint.x == 0 ){
+
+            if (tempPoint.y>0){
+                angle = 0;
+            }else {
+                angle = 180;
+            }
+        }
+
+        nextDirection = angle;
+
+        boolean inTolerance = TurnAngleUtil.isInTolerance(angle, currentAngle);
+
+        if (inTolerance){//在误差范围内，直接前进
+
+            mBrain.sendCommand("{'type':'command','function':'walk','data':{'distance':"+pxTrandferToDistance((float) Math.sqrt(tempPoint.x*tempPoint.x+tempPoint.y*tempPoint.y))+"}}");
+
+
+        }else {
+            mBrain.sendCommand("{'type':'command','function':'turn','data':{'degree':"+TurnAngleUtil.getTransferAngle(currentAngle - angle)+"}}");
+        }
+
+        return true;
     }
 
     public void isSetRobotPoint(boolean flag){

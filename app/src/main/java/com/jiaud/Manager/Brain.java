@@ -3,6 +3,7 @@ package com.jiaud.Manager;
 import android.graphics.Point;
 
 import com.jiadu.fragment.MapFragment;
+import com.jiadu.mapdemo.util.LogUtil;
 import com.jiadu.service.ServerSocketUtil;
 
 import org.json.JSONException;
@@ -28,6 +29,11 @@ public class Brain {
     public final String TURNING = "turning";//right left
     public final String ZHAOREN = "manyou";
     public final String CAMERA = "3dcamera";
+    public final String CAMERA_FINDING = "finding";//正在找人
+    public final String CAMERA_FOUND = "found";//找到了人
+    public final String CAMERA_BACK = "back";//在返回中
+    public final String CAMERA_CHAT = "chat";//在与客人交流中
+
     public final String STOP = "stop";
     public final String INTERMEDIATER = "intermediater";
     public Point RobotPointBeforeWalk = null;
@@ -70,6 +76,9 @@ public class Brain {
 
     public void sendCommand(String string){
         try {
+
+            LogUtil.debugLog("发送的数据："+string);
+
             JSONObject json = new JSONObject(string);
             String type = (String) json.get("type");
 

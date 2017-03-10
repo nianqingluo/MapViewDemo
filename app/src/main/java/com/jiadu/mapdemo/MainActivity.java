@@ -84,7 +84,7 @@ public class MainActivity extends AppCompatActivity implements IViewMainActivity
     private void registerSocketReceiver() {
 
         mMbReceive = new MessageBroadcast();
-        ReceiveBrain listener = ReceiveBrain.getInstance();
+        ReceiveBrain listener =  ReceiveBrain.getInstance();
 //        listener.setContext(this);
         mMbReceive.setListener(listener);
 

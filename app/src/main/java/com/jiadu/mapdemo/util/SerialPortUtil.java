@@ -118,7 +118,7 @@ public class SerialPortUtil {
         mFlag = false;
     }
     
-    public void stopReceive(){
+    private void stopReceive(){
 
         mFlag =false;
 

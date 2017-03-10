@@ -63,13 +63,7 @@ public class ServerSocketUtil extends Service {
             String camera = intent.getStringExtra("camera");
             Constant.debugLog("收到摄像头数据" + camera);
 
-            if (camera != null) {
-                try {
-                    sendDateToClient(camera);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+
         }
     }
 
@@ -239,7 +233,6 @@ public class ServerSocketUtil extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        // TODO: Return the communication channel to the service.
         throw new UnsupportedOperationException("Not yet implemented");
     }
 }
