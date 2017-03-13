@@ -33,6 +33,8 @@ public class Brain {
     public final String CAMERA_FOUND = "found";//找到了人
     public final String CAMERA_BACK = "back";//在返回中
     public final String CAMERA_CHAT = "chat";//在与客人交流中
+    public final String RETURNING = "returning";//在返回原点
+    public final String RETURN = "return";//在返回原点
 
     public final String STOP = "stop";
     public final String INTERMEDIATER = "intermediater";

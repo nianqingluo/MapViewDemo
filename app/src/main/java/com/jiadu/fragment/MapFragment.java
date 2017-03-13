@@ -52,6 +52,7 @@ public class MapFragment extends Fragment implements View.OnClickListener, IMapV
     private boolean isSetPath;
     private boolean hasShowScaleInfo = false;
 
+
     private Brain mBrain = Brain.getInstance();
 
     /**
@@ -67,7 +68,6 @@ public class MapFragment extends Fragment implements View.OnClickListener, IMapV
      * 3:代表线路 3
      */
     public int mPath = 1;
-
 
 
     private Button mBt_choicepath;
@@ -590,6 +590,7 @@ public class MapFragment extends Fragment implements View.OnClickListener, IMapV
 
                 mBrain.setStateMapValue(mBrain.CAMERA,null);
                 mBrain.setStateMapValue(mBrain.MANYOU,null);
+                mBrain.setStateMapValue(mBrain.RETURN,mBrain.RETURNING);
 
                 gotoPoint(getCenterPoint());
 

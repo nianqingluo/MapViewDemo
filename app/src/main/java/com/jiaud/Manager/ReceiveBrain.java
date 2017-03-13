@@ -100,7 +100,6 @@ public class ReceiveBrain implements MessageBroadcast.MessageListener{
 
             if (mBrain.CAMERA.equals(function) && mBrain.getStateMapValue(mBrain.CAMERA)!=null){//说明是在3d摄像头找人
                 JSONObject data = (JSONObject) jsonObject.get("data");
-                mBrain.sendCommand("{'type':'command','function':'stop','data':''}");
 
                 if ("body".equals(data.get("result"))){  //说明3D摄像头找到人了
 
@@ -112,10 +111,12 @@ public class ReceiveBrain implements MessageBroadcast.MessageListener{
 
                     float v = (mMapFragment.currentAngle + angle)%360;
 
+
                     if (TurnAngleUtil.isInTolerance(v,mMapFragment.currentAngle)){//表示找的人在正对准机器人
                         if (mDistance <= 1){
                             // TODO: 2017/3/9 人就在旁边，播放广告
                             mBrain.setStateMapValue(mBrain.CAMERA,mBrain.CAMERA_CHAT);
+                            mBrain.sendCommand("{'type':'command','function':'stop','data':''}");
                             ToastUtils.makeToast(mContext,"已经到人面前了，播放广告");
                         }
                         else if (mDistance >1){
@@ -127,6 +128,8 @@ public class ReceiveBrain implements MessageBroadcast.MessageListener{
                     }else {//表示找的人没有对准机器人，需要转一定角度
                         // TODO: 2017/3/9  表示找的人没有对准机器人，需要转一定角度
                         float transferAngle = TurnAngleUtil.getTransferAngle(mMapFragment.currentAngle - v);
+
+                        LogUtil.debugLog("表示找的人没有对准机器人，需要转一定角度");
 
                         mBrain.setStateMapValue(mBrain.CAMERA,mBrain.CAMERA_FOUND);
 
@@ -141,19 +144,22 @@ public class ReceiveBrain implements MessageBroadcast.MessageListener{
 
                 }
                 else if ("away".equals(data.get("result"))){//说明人走开了
-
-                    if (mBrain.getStateMapValue(mBrain.CAMERA)!=null){
-                        
-                        if (mBrain.CAMERA_FOUND.equals(mBrain.getStateMapValue(mBrain.CAMERA))){//表示找到人后，人走开了
-                            if (mBrain.WALK_FORWARD.equals(mBrain.getStateMapValue(mBrain.WALK))){
-                                if (mBrain.getStateMapValue(mBrain.WALK)!=null){//表示在往人方向走的过程中人离开了
-                                    LogUtil.debugLog("在往人方向走的过程中人离开了");
-                                    mBrain.sendCommand("{'type':'command','function':'stop','data':''}");
-                                }
-                                else if (mBrain.getStateMapValue(mBrain.TURN)!=null){//表示在旋转过程中人走开了
-                                    LogUtil.debugLog("表示在旋转过程中人走开了");
-                                    mBrain.sendCommand("{'type':'command','function':'stop','data':''}");
-                                }
+                
+                    if (mBrain.CAMERA_FOUND.equals(mBrain.getStateMapValue(mBrain.CAMERA))){//表示找到人后，人走开了
+                        if (mBrain.getStateMapValue(mBrain.WALK)!=null){
+                            if (mBrain.WALK_FORWARD.equals(mBrain.getStateMapValue(mBrain.WALK))){//表示在往人方向走的过程中人离开了
+                                LogUtil.debugLog("在往人方向走的过程中人离开了");
+//                                    mBrain.sendCommand("{'type':'command','function':'stop','data':''}");
+                                mBrain.setStateMapValue(mBrain.CAMERA,mBrain.CAMERA_BACK);
+                                mMapFragment.gotoPoint(mMapFragment.getStartManYouPoint());
+                            }
+                        }
+                        else if (mBrain.getStateMapValue(mBrain.TURN)!=null){
+                            if (mBrain.TURNING.equals(mBrain.getStateMapValue(mBrain.TURN))){//表示在旋转过程中人走开了
+                                LogUtil.debugLog("表示在旋转过程中人走开了");
+                                mBrain.setStateMapValue(mBrain.CAMERA,null);
+                                mBrain.sendCommand("{'type':'command','function':'stop','data':''}");
+                                mMapFragment.startManYou(mMapFragment.getStartManYouPoint(),mMapFragment.getNextPoint());
                             }
                         }
                     }
@@ -166,7 +172,7 @@ public class ReceiveBrain implements MessageBroadcast.MessageListener{
                 changeRobotPoint(dis);
                 if ("success".equals(data.get("result"))){ //说明行走完成
                     mBrain.setStateMapValue(mBrain.WALK,null);
-                    if (mBrain.getStateMapValue(mBrain.MANYOU)!=null){
+                    if (mBrain.getStateMapValue(mBrain.MANYOU)!=null){//漫游状态下完成行走
                         if (mBrain.MANYOU_TARGET.equals(mBrain.getStateMapValue(mBrain.MANYOU))){//在漫游目的点状态下完成行走
                             LogUtil.debugLog("到达漫游点："+dis);
                             if (mMapFragment!=null){
@@ -180,7 +186,7 @@ public class ReceiveBrain implements MessageBroadcast.MessageListener{
             //                        mMapFragment.startManYou(mMapFragment.getRobotPointInMap(),mMapFragment.getNextPoint());
                             close3DCamera("远");
                             mBrain.setStateMapValue(mBrain.CAMERA,mBrain.CAMERA_FINDING);
-                            mBrain.sendCommand("{'type':'command','function':'peoplesearch','data':''}");
+                            mBrain.sendCommand("{'type':'command','function':'turn','data':{'degree':720}}");
                         }
                         else if (mBrain.MANYOU_TEMP.equals(mBrain.getStateMapValue(mBrain.MANYOU))){//在漫游临时点状态下完成行走
 //                            changeRobotPoint(dis);
@@ -208,9 +214,11 @@ public class ReceiveBrain implements MessageBroadcast.MessageListener{
                             mMapFragment.setRobotPointInMap(mMapFragment.getStartManYouPoint(),false);
                             //需要往下一个漫游点行走
                             mMapFragment.startManYou(mMapFragment.getStartManYouPoint(),mMapFragment.getNextPoint());
-
-
                         }
+                    }
+                    else if (mBrain.getStateMapValue(mBrain.RETURN)!=null){//在返回原点中完成行走
+                        LogUtil.debugLog("在返回原点中完成行走");
+                        mBrain.setStateMapValue(mBrain.RETURN,mBrain.RETURNING);
                     }
                 }
                 else if ("fail".equals(data.get("result"))){//说明行走失败
@@ -223,8 +231,6 @@ public class ReceiveBrain implements MessageBroadcast.MessageListener{
                     if (mBrain.getStateMapValue(mBrain.CAMERA)!=null){//在找人状态下行走失败
                         if (mBrain.CAMERA_FOUND.equals(mBrain.getStateMapValue(mBrain.CAMERA))){//表示人走开了
                             LogUtil.debugLog("表示人走开了");
-                            mBrain.setStateMapValue(mBrain.CAMERA,mBrain.CAMERA_BACK);
-                            mMapFragment.gotoPoint(mMapFragment.getStartManYouPoint());
                         }
                     }
                 }
@@ -233,6 +239,10 @@ public class ReceiveBrain implements MessageBroadcast.MessageListener{
                     if (mBrain.getStateMapValue(mBrain.MANYOU)!=null){//在漫游状态下的运动中
                         LogUtil.debugLog("在漫游状态下的运动中");
 //                        changeRobotPoint(dis);
+                    }
+                    else if (mBrain.getStateMapValue(mBrain.CAMERA)!=null){
+                        LogUtil.debugLog("在找人状态下的运动中");
+
                     }
                 }
             }
@@ -265,8 +275,14 @@ public class ReceiveBrain implements MessageBroadcast.MessageListener{
                                 }
                                 else if (mBrain.getStateMapValue(mBrain.CAMERA)!=null){//说明在找人的状态下完成旋转
 
-                                    if (mBrain.CAMERA_FINDING.equals(mBrain.getStateMapValue(mBrain.CAMERA))){//说明正在找人的状态下完成转弯
+                                    if (mBrain.CAMERA_FINDING.equals(mBrain.getStateMapValue(mBrain.CAMERA))){//说明正在找人的状态下完成转弯,说明找人超时
                                         LogUtil.debugLog("正在找人的状态下完成转弯");
+
+                                        mBrain.setStateMapValue(mBrain.CAMERA,null);
+                                        //关闭3D摄像头
+                                        close3DCamera("关闭");
+                                        mBrain.sendCommand("{'type':'command','function':'stop','data':''}");
+                                        mMapFragment.startManYou(mMapFragment.getStartManYouPoint(),mMapFragment.getNextPoint());
 
                                     }
                                     else if (mBrain.CAMERA_FOUND.equals(mBrain.getStateMapValue(mBrain.CAMERA))){//说明在找到人的状态下完成转弯
@@ -285,11 +301,21 @@ public class ReceiveBrain implements MessageBroadcast.MessageListener{
                                     else if (mBrain.CAMERA_BACK.equals(mBrain.getStateMapValue(mBrain.CAMERA))){//说明返回漫游点转弯完成
                                         LogUtil.debugLog("返回漫游点转弯完成转弯");
                                         mMapFragment.gotoPoint(mMapFragment.getStartManYouPoint());
-
                                     }
+                                }
+                                else if (mBrain.getStateMapValue(mBrain.RETURN)!=null){//说明在返回原点中完成转弯
+                                    mMapFragment.gotoPoint(mMapFragment.getCenterPoint());
                                 }
                             }
                             else {//说明转弯角度不精确
+
+                                if (mBrain.CAMERA_FINDING.equals(mBrain.getStateMapValue(mBrain.CAMERA))){//没有找到人，去下一个点
+                                    mBrain.setStateMapValue(mBrain.CAMERA,null);
+                                    //关闭摄像头
+                                    close3DCamera("关闭");
+                                    mMapFragment.startManYou(mMapFragment.getRobotPointInMap(),mMapFragment.getNextPoint());
+                                    return;
+                                }
                                 float v = mMapFragment.currentAngle - mMapFragment.nextDirection;
                                 LogUtil.debugLog("转弯角度不精确");
                                 float transferAngle = TurnAngleUtil.getTransferAngle(v);
@@ -303,19 +329,11 @@ public class ReceiveBrain implements MessageBroadcast.MessageListener{
                     if (mBrain.getStateMapValue(mBrain.CAMERA)!=null){
                         if (mBrain.CAMERA_FINDING.equals(mBrain.getStateMapValue(mBrain.CAMERA))){//在3D摄像头找人情况下失败,说明找人超时，发了STOP命令
                             LogUtil.debugLog("说明找人超时");
-                            mBrain.setStateMapValue(mBrain.CAMERA,null);
-
-                            //关闭3D摄像头
-                            close3DCamera("关闭");
-
-                            mBrain.sendCommand("{'type':'command','function':'stop','data':''}");
-                            mMapFragment.startManYou(mMapFragment.getStartManYouPoint(),mMapFragment.getNextPoint());
+                            
                         }
                         else if (mBrain.CAMERA_FOUND.equals(mBrain.getStateMapValue(mBrain.CAMERA))){//表示在找到人行走前人走开了，停止行走，往下一个漫游点走去
                             LogUtil.debugLog("找到人行走前人走开了，停止行走，往下一个漫游点走去");
-                            mBrain.setStateMapValue(mBrain.CAMERA,null);
-                            mBrain.sendCommand("{'type':'command','function':'stop','data':''}");
-                            mMapFragment.startManYou(mMapFragment.getStartManYouPoint(),mMapFragment.getNextPoint());
+
                         }
                     }
                 }
