@@ -17,6 +17,7 @@ import org.json.JSONObject;
 import java.util.Timer;
 import java.util.TimerTask;
 
+
 /**
  * Created by Administrator on 2017/3/7.
  */
@@ -111,16 +112,17 @@ public class ReceiveBrain implements MessageBroadcast.MessageListener{
 
                     float v = (mMapFragment.currentAngle + angle)%360;
 
-
                     if (TurnAngleUtil.isInTolerance(v,mMapFragment.currentAngle)){//表示找的人在正对准机器人
                         if (mDistance <= 1){
                             // TODO: 2017/3/9 人就在旁边，播放广告
+                            LogUtil.debugLog("人就在旁边，播放广告");
                             mBrain.setStateMapValue(mBrain.CAMERA,mBrain.CAMERA_CHAT);
                             mBrain.sendCommand("{'type':'command','function':'stop','data':''}");
                             ToastUtils.makeToast(mContext,"已经到人面前了，播放广告");
                         }
                         else if (mDistance >1){
                             // TODO: 2017/3/9 人在前面，需要走到前面才播放广告
+                            LogUtil.debugLog("人在前面，需要走到前面才播放广告");
                             mBrain.setStateMapValue(mBrain.CAMERA,mBrain.CAMERA_FOUND);
                             mBrain.sendCommand("{'type':'command','function':'turn','data':{'degree':"+(mDistance -1)+"}}");
 
@@ -184,7 +186,7 @@ public class ReceiveBrain implements MessageBroadcast.MessageListener{
 
                             // TODO: 2017/3/8 漫游达到一个点完成后需要添加的逻辑
             //                        mMapFragment.startManYou(mMapFragment.getRobotPointInMap(),mMapFragment.getNextPoint());
-                            close3DCamera("远");
+                            operate3DCamera("远");
                             mBrain.setStateMapValue(mBrain.CAMERA,mBrain.CAMERA_FINDING);
                             mBrain.sendCommand("{'type':'command','function':'turn','data':{'degree':720}}");
                         }
@@ -280,7 +282,7 @@ public class ReceiveBrain implements MessageBroadcast.MessageListener{
 
                                         mBrain.setStateMapValue(mBrain.CAMERA,null);
                                         //关闭3D摄像头
-                                        close3DCamera("关闭");
+                                        operate3DCamera("关闭");
                                         mBrain.sendCommand("{'type':'command','function':'stop','data':''}");
                                         mMapFragment.startManYou(mMapFragment.getStartManYouPoint(),mMapFragment.getNextPoint());
 
@@ -312,7 +314,7 @@ public class ReceiveBrain implements MessageBroadcast.MessageListener{
                                 if (mBrain.CAMERA_FINDING.equals(mBrain.getStateMapValue(mBrain.CAMERA))){//没有找到人，去下一个点
                                     mBrain.setStateMapValue(mBrain.CAMERA,null);
                                     //关闭摄像头
-                                    close3DCamera("关闭");
+                                    operate3DCamera("关闭");
                                     mMapFragment.startManYou(mMapFragment.getRobotPointInMap(),mMapFragment.getNextPoint());
                                     return;
                                 }
@@ -348,7 +350,7 @@ public class ReceiveBrain implements MessageBroadcast.MessageListener{
      *              "关闭" 表示关闭3D摄像头找人
      *
      */
-    private void close3DCamera(String type) {
+    private void operate3DCamera(String type) {
         Intent intent = new Intent();
         intent.setAction("com.jdrd.CursorSDKExample.TD_CAMERA");
         intent.putExtra("msg", type);
@@ -373,7 +375,7 @@ public class ReceiveBrain implements MessageBroadcast.MessageListener{
 
         p.y = (int) (p.y - dy);
 
-        p.x = (int) (p.x+dx);
+        p.x = (int) (p.x + dx);
 
         mMapFragment.setRobotPointInMap(p,false);
 

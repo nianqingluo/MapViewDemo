@@ -131,6 +131,7 @@ public class Brain {
                 stopAll();
             } catch (IOException e) {
                 e.printStackTrace();
+
             }
         }
     }

@@ -25,7 +25,6 @@ import com.jiadu.mapdemo.util.ToastUtils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
 
 /**
  * Created by Administrator on 2017/2/13.
@@ -49,7 +48,6 @@ public class MapView extends ImageView {
     private Point mRobotPoint = new Point();  //记录robort在地图中的位置
 
     private float mDirectionAngle = 0;
-    private Random mRandom = new Random();
     private boolean canSetPath = false;
     private float mScale = 1;     //地图缩放比例
     private float mTranslateX = 0;//X平移的距离
@@ -90,20 +88,66 @@ public class MapView extends ImageView {
     private int mCurrentListPosition=-1;//当前漫游路劲中的点
     private boolean hasFinishLoop = false;//表示漫游1圈是否完成回到原点
 
+    private List<Point> mWalkedPoint = new ArrayList<Point>();
+    private Path mWalkedPath = new Path();
+    private List<Path> mWalkedArrow = new ArrayList<Path>();
+
     private Point intermediatePoint1 = null;
     private Point intermediatePoint2 = null;
     private Point intermediatePoint3 = null;
-
 
     public int getCurrentListPosition() {
         return mCurrentListPosition;
     }
     public void setCurrentListPosition(int currentListPosition) {
 
-        if (currentListPosition >= pathListAfterTransfer1.size()){
+        if (currentListPosition >= pathListAfterTransfer1.size() || currentListPosition == -1){
 
             this.mCurrentListPosition = -1;
+
+            mWalkedPoint.clear();
+            mWalkedArrow.clear();
+            mWalkedPath.reset();
+            mWalkedPath.moveTo(mCenterPoint.x,mCenterPoint.y);
+
         }else {
+
+            Point point = pathListAfterTransfer1.get(currentListPosition);
+
+            if (mWalkedPoint.size() == 0){//说明此前没有完成的路径点
+
+                if (point.x == mCenterPoint.x || point.y == mCenterPoint.y){//说明x轴或者y轴有一个是Ok的，不需要增加中间点
+                    mWalkedPoint.add(point);
+                    mWalkedPath.lineTo(point.x,point.y);
+                    mWalkedArrow = pointToArrow(mWalkedPoint);
+                }else { //说明需要增加一个中间点
+
+                    Point pointtemp = new Point(point.x,mCenterPoint.y);
+                    //                        mWalkedPoint.add(pointtemp);
+                    mWalkedPath.lineTo(pointtemp.x,pointtemp.y);
+                    //                        mDbUtil.addPoint(pointtemp.x,pointtemp.y,pathNum);
+                }
+            }
+
+            else if (mWalkedPoint.size() != 0){//说明之前有路径点
+                //说明不需要增加一个中间点
+                if (point.x == mWalkedPoint.get(mWalkedPoint.size()-1).x || point.y == mWalkedPoint.get(mWalkedPoint.size()-1).y){//说明x轴或者y轴有一个是Ok的
+                    mWalkedPoint.add(point);
+                    mWalkedPath.lineTo(point.x,point.y);
+                    mWalkedArrow = pointToArrow(mWalkedPoint);
+
+                }else { //说明需要增加一个中间点
+
+                    Point pointtemp = new Point(point.x,mWalkedPoint.get(mWalkedPoint.size()-1).y);
+                    //                        mWalkedPoint.add(pointtemp);
+                    mWalkedPath.lineTo(pointtemp.x,pointtemp.y);
+                    //                        mDbUtil.addPoint(pointtemp.x,pointtemp.y,pathNum);
+                }
+            }
+
+            mWalkedPoint.add(point);
+            mWalkedPath.lineTo(point.x,point.y);
+            mWalkedArrow = pointToArrow(mWalkedPoint);
 
             this.mCurrentListPosition = currentListPosition;
         }
@@ -145,6 +189,8 @@ public class MapView extends ImageView {
         if (mMapFragment!=null){
             mMapFragment.setRobotPointInfo();
         }
+
+
         invalidate();
     }
 
@@ -329,7 +375,6 @@ public class MapView extends ImageView {
                         return;
                     }
                 }
-
 
                 if (pathListAfterTransfer3.size() == 0){//说明此前没有路径点
 
@@ -560,6 +605,8 @@ public class MapView extends ImageView {
 
         //初始化硬盘数据
         initDataFromDataBase();
+
+
     }
 
     private void drawGridBitmap() {
@@ -607,6 +654,8 @@ public class MapView extends ImageView {
         List<Point> pathListAfterTransferTemp1 = mDbUtil.queryPathPoint(1);
         List<Point> pathListAfterTransferTemp2 = mDbUtil.queryPathPoint(2);
         List<Point> pathListAfterTransferTemp3 = mDbUtil.queryPathPoint(3);
+
+        mWalkedPath.moveTo(mCenterPoint.x ,mCenterPoint.y);
 
         path1.moveTo(mCenterPoint.x ,mCenterPoint.y);
         for (Point p:pathListAfterTransferTemp1) {
@@ -887,9 +936,27 @@ public class MapView extends ImageView {
 
                 canvas.drawPath(drawArrow(pathListAfterTransfer3.get(pathListAfterTransfer3.size()-1).x,pathListAfterTransfer3.get(pathListAfterTransfer3.size()-1).y,mCenterPoint.x,mCenterPoint.y),mArrowPaint);
             }
-
-
         }
+
+
+        //绘制行走过的路径
+        if (mWalkedPath !=null){
+            mPathPaint.setColor(Color.rgb(252,165,32));
+            canvas.drawPath(mWalkedPath,mPathPaint);
+        }
+        //绘制行走过的箭头
+        for (Path arrow: mWalkedArrow) {
+            mArrowPaint.setColor(Color.rgb(252,165,32));
+            canvas.drawPath(arrow,mArrowPaint);
+        }
+        //绘制行走过的Point
+        for (Point point:mWalkedPoint ) {
+            mPaint.setColor(Color.rgb(252,165,32));
+            canvas.drawCircle(point.x,point.y,10,mPaint);
+        }
+
+
+
         //在设置路径的时候，预显示点
         if (tempPoint !=null){
 
