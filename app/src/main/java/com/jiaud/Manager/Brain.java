@@ -60,12 +60,14 @@ public class Brain {
         return instance;
     }
 
-    private Brain(){}
+    private Brain(){
 
+    }
 
     public String getStateMapValue(String key){
         return stateMap.get(key);
     }
+
     public void setStateMapValue(String key, String value){
         
         if (value == null){
@@ -89,7 +91,6 @@ public class Brain {
             }
             else if ("state".equals(type)){//说明处理的是状态
 
-
             }
             else if ("param".equals(type)){//说明处理的是参数
                         
@@ -97,7 +98,6 @@ public class Brain {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-
     }
 
     private void handleSendCommand(JSONObject json) throws JSONException {
@@ -115,8 +115,8 @@ public class Brain {
                 stateMap.put(WALK,WALK_FORWARD);
             } catch (IOException e) {
                 e.printStackTrace();
-            }
         }
+            }
         else if (TURN.equals(function)){//是要发送转弯命令
             try {
                 stopAll();
